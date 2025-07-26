@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import styled from 'styled-components'
 import { useState, useRef, useEffect } from 'react'
+import aiService from '../services/aiService'
 
 const ChatBotContainer = styled.div`
   position: fixed;
@@ -280,7 +281,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hello! I'm PRIME, your AI assistant. I can help you learn more about this portfolio, discuss projects, or answer any questions you might have. How can I assist you today?",
+      text: "Hello! I'm PRIME, your AI assistant powered by OpenAI's GPT technology. I can help you learn more about Aditya's portfolio, discuss projects, or answer any questions you might have. How can I assist you today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -297,36 +298,6 @@ const ChatBot = () => {
     scrollToBottom()
   }, [messages, isTyping])
 
-  const getBotResponse = (userMessage) => {
-    const message = userMessage.toLowerCase()
-    
-    if (message.includes('project') || message.includes('work')) {
-      return "I can tell you about the various projects showcased in this portfolio! There are web applications, mobile apps, AI/ML projects, blockchain solutions, and IoT dashboards. Each project demonstrates different technical skills and innovative approaches. Which type of project interests you most?"
-    }
-    
-    if (message.includes('skill') || message.includes('technology') || message.includes('tech')) {
-      return "The developer specializes in a wide range of technologies including React, Node.js, Python, TypeScript, MongoDB, PostgreSQL, Docker, AWS, Three.js, and many more. The tech stack is constantly evolving to stay current with industry trends!"
-    }
-    
-    if (message.includes('contact') || message.includes('hire') || message.includes('work together')) {
-      return "Great! You can get in touch through the contact form on this page, or scroll down to the 'Establish Connection' section. The developer typically responds within 24 hours and is always excited to discuss new opportunities!"
-    }
-    
-    if (message.includes('experience') || message.includes('background')) {
-      return "With 3+ years of experience and 50+ completed projects, the developer has worked across various domains including e-commerce, AI/ML, mobile applications, and blockchain. The focus is always on creating innovative, user-centric solutions."
-    }
-    
-    if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-      return "Hello! Welcome to this Transformers-themed portfolio! I'm here to help you navigate and learn more about the developer's work. Feel free to ask me anything about the projects, skills, or how to get in touch!"
-    }
-    
-    if (message.includes('transformer') || message.includes('autobot') || message.includes('theme')) {
-      return "Cool that you noticed the Transformers theme! This portfolio is designed with inspiration from the Autobots - featuring dark backgrounds, 3D animations, holographic effects, and futuristic UI elements. It represents the developer's ability to 'transform' ideas into digital reality!"
-    }
-    
-    return "That's an interesting question! I'm here to help you learn more about this portfolio, the projects showcased, or how to get in touch with the developer. Feel free to ask about specific projects, technical skills, or anything else you'd like to know!"
-  }
-
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
@@ -337,22 +308,36 @@ const ChatBot = () => {
       timestamp: new Date()
     }
 
+    const messageToSend = inputValue
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
     setIsTyping(true)
 
-    // Simulate AI thinking time
-    setTimeout(() => {
+    try {
+      // Get AI response
+      const aiResponse = await aiService.generateResponse(messageToSend)
+      
       const botResponse = {
         id: Date.now() + 1,
-        text: getBotResponse(inputValue),
+        text: aiResponse,
         sender: 'bot',
         timestamp: new Date()
       }
       
       setMessages(prev => [...prev, botResponse])
       setIsTyping(false)
-    }, 1500)
+    } catch (error) {
+      console.error('Error getting AI response:', error)
+      const errorResponse = {
+        id: Date.now() + 1,
+        text: "I apologize, but I'm experiencing some technical difficulties. Please try again in a moment, or feel free to contact Aditya directly through the contact form!",
+        sender: 'bot',
+        timestamp: new Date()
+      }
+      
+      setMessages(prev => [...prev, errorResponse])
+      setIsTyping(false)
+    }
   }
 
   const handleKeyPress = (e) => {
@@ -375,7 +360,7 @@ const ChatBot = () => {
               <BotAvatar>🤖</BotAvatar>
               <BotInfo>
                 <h4>PRIME Assistant</h4>
-                <p>AI-powered help system</p>
+                <p>GPT-powered AI assistant</p>
               </BotInfo>
               <CloseButton onClick={() => setIsOpen(false)}>×</CloseButton>
             </ChatHeader>
