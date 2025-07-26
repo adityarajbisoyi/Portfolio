@@ -79,7 +79,7 @@ const TitleLetter = styled(motion.span)`
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    transform: rotateY(180deg) translateZ(1px);
+    transform: translateZ(1px);
     opacity: 0.3;
   }
 `
