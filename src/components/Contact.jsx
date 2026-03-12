@@ -4,24 +4,8 @@ import { useState } from 'react'
 
 const ContactContainer = styled.section`
   padding: 6rem 2rem;
-  background: linear-gradient(135deg, 
-    rgba(13, 20, 33, 0.9) 0%, 
-    rgba(0, 0, 0, 0.95) 100%
-  );
+  background: ${props => props.theme.colors.dark};
   position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%);
-    pointer-events: none;
-  }
 `
 
 const ContactContent = styled.div`
@@ -32,13 +16,13 @@ const ContactContent = styled.div`
 `
 
 const SectionTitle = styled(motion.h2)`
-  font-size: 3rem;
-  font-weight: 900;
+  font-size: 2.5rem;
+  font-weight: 800;
   text-align: center;
   margin-bottom: 3rem;
-  color: ${props => props.theme.colors.primary};
-  text-shadow: 0 0 20px ${props => props.theme.colors.primary};
-  
+  color: ${props => props.theme.colors.white};
+  letter-spacing: -0.5px;
+
   @media (max-width: 768px) {
     font-size: 2rem;
   }
@@ -48,7 +32,7 @@ const ContactGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -56,140 +40,123 @@ const ContactGrid = styled.div`
 `
 
 const ContactInfo = styled(motion.div)`
-  background: rgba(0, 255, 255, 0.05);
-  border: 1px solid ${props => props.theme.colors.primary};
+  background: ${props => props.theme.colors.cardBg};
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 
-    0 0 30px rgba(0, 255, 255, 0.2),
-    inset 0 0 30px rgba(0, 255, 255, 0.05);
 `
 
 const ContactForm = styled(motion.form)`
-  background: rgba(255, 107, 53, 0.05);
-  border: 1px solid ${props => props.theme.colors.secondary};
+  background: ${props => props.theme.colors.cardBg};
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 
-    0 0 30px rgba(255, 107, 53, 0.2),
-    inset 0 0 30px rgba(255, 107, 53, 0.05);
 `
 
 const ContactTitle = styled.h3`
-  font-size: 1.8rem;
-  color: ${props => props.theme.colors.primary};
-  margin-bottom: 2rem;
-  text-shadow: 0 0 10px ${props => props.theme.colors.primary};
+  font-size: 1.25rem;
+  color: ${props => props.theme.colors.white};
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 `
 
 const ContactItem = styled(motion.div)`
   display: flex;
   align-items: center;
-  margin-bottom: 1.5rem;
-  color: ${props => props.theme.colors.metallic};
-  font-size: 1.1rem;
-  
-  &:before {
-    content: '►';
-    color: ${props => props.theme.colors.primary};
-    margin-right: 1rem;
-    font-size: 1.2rem;
-    text-shadow: 0 0 5px ${props => props.theme.colors.primary};
+  margin-bottom: 1.25rem;
+  color: ${props => props.theme.colors.grey};
+  font-size: 1rem;
+
+  strong {
+    color: ${props => props.theme.colors.greyLight};
+    min-width: 120px;
   }
 `
 
+const ContactDot = styled.span`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${props => props.theme.colors.primary};
+  margin-right: 1rem;
+  flex-shrink: 0;
+`
+
 const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 `
 
 const Label = styled.label`
   display: block;
-  color: ${props => props.theme.colors.primary};
+  color: ${props => props.theme.colors.greyLight};
   margin-bottom: 0.5rem;
-  font-weight: 600;
-  text-shadow: 0 0 5px ${props => props.theme.colors.primary};
+  font-weight: 500;
+  font-size: 0.9rem;
 `
 
 const Input = styled.input`
   width: 100%;
-  padding: 1rem;
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid ${props => props.theme.colors.primary};
-  border-radius: 6px;
-  color: ${props => props.theme.colors.metallic};
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  
+  padding: 0.875rem 1rem;
+  background: rgba(91, 164, 230, 0.05);
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: 8px;
+  color: ${props => props.theme.colors.white};
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
   &:focus {
     outline: none;
-    box-shadow: 0 0 15px ${props => props.theme.colors.primary};
-    background: rgba(0, 255, 255, 0.15);
+    border-color: ${props => props.theme.colors.primary};
+    background: rgba(91, 164, 230, 0.08);
   }
-  
+
   &::placeholder {
-    color: rgba(192, 192, 192, 0.6);
+    color: ${props => props.theme.colors.greyDark};
   }
 `
 
 const TextArea = styled.textarea`
   width: 100%;
-  padding: 1rem;
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid ${props => props.theme.colors.primary};
-  border-radius: 6px;
-  color: ${props => props.theme.colors.metallic};
-  font-size: 1rem;
+  padding: 0.875rem 1rem;
+  background: rgba(91, 164, 230, 0.05);
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: 8px;
+  color: ${props => props.theme.colors.white};
+  font-size: 0.95rem;
   resize: vertical;
   min-height: 120px;
-  transition: all 0.3s ease;
   font-family: inherit;
-  
+  transition: all 0.2s ease;
+
   &:focus {
     outline: none;
-    box-shadow: 0 0 15px ${props => props.theme.colors.primary};
-    background: rgba(0, 255, 255, 0.15);
+    border-color: ${props => props.theme.colors.primary};
+    background: rgba(91, 164, 230, 0.08);
   }
-  
+
   &::placeholder {
-    color: rgba(192, 192, 192, 0.6);
+    color: ${props => props.theme.colors.greyDark};
   }
 `
 
 const SubmitButton = styled(motion.button)`
-  background: linear-gradient(45deg, 
-    ${props => props.theme.colors.primary}, 
-    ${props => props.theme.colors.secondary}
-  );
+  background: ${props => props.theme.colors.primary};
   border: none;
-  padding: 1rem 2rem;
+  padding: 0.875rem 2rem;
   border-radius: 8px;
   color: ${props => props.theme.colors.dark};
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
   width: 100%;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.2), 
-      transparent
-    );
-    transition: left 0.5s;
+  font-family: inherit;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: ${props => props.theme.colors.primaryLight};
   }
-  
-  &:hover::before {
-    left: 100%;
-  }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -198,30 +165,36 @@ const SubmitButton = styled(motion.button)`
 
 const SocialLinks = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-top: 2rem;
-  justify-content: center;
 `
 
 const SocialLink = styled(motion.a)`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid ${props => props.theme.colors.primary};
+  width: 44px;
+  height: 44px;
+  background: rgba(91, 164, 230, 0.06);
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 50%;
-  color: ${props => props.theme.colors.primary};
+  color: ${props => props.theme.colors.grey};
   text-decoration: none;
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
-  
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
   &:hover {
-    background: rgba(0, 255, 255, 0.2);
-    box-shadow: 0 0 15px ${props => props.theme.colors.primary};
-    transform: translateY(-2px);
+    border-color: ${props => props.theme.colors.primary};
+    color: ${props => props.theme.colors.white};
+    background: rgba(91, 164, 230, 0.12);
   }
+`
+
+const SocialIcon = styled.svg`
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
 `
 
 const Contact = () => {
@@ -243,9 +216,8 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     try {
-      // Using Formspree for form submission
       const response = await fetch('https://formspree.io/f/mvgqalng', {
         method: 'POST',
         headers: {
@@ -259,16 +231,16 @@ const Contact = () => {
           _replyto: formData.email,
         }),
       })
-      
+
       if (response.ok) {
-        alert('🚀 Transmission successful! Message sent to the mothership. You will receive a response within 24 hours.')
+        alert('Message sent successfully! I will respond within 24 hours.')
         setFormData({ name: '', email: '', subject: '', message: '' })
       } else {
-        throw new Error('Transmission failed')
+        throw new Error('Failed to send')
       }
     } catch (error) {
       console.error('Error sending message:', error)
-      alert('⚠️ Transmission failed! Please try again or contact directly at learnerbisoyi@gmail.com')
+      alert('Failed to send message. Please try again or contact directly at learnerbisoyi@gmail.com')
     } finally {
       setIsSubmitting(false)
     }
@@ -276,96 +248,103 @@ const Contact = () => {
 
   const contactInfo = [
     { label: 'Email', value: 'learnerbisoyi@gmail.com' },
-    { label: 'Linkedin', value: 'Aditya Raj Bisoyi' },
+    { label: 'LinkedIn', value: 'Aditya Raj Bisoyi' },
     { label: 'Location', value: 'Bangalore, India' },
-    { label: 'Response Time', value: '< 24 hours' }
+    { label: 'Response', value: 'Within 24 hours' }
   ]
 
   return (
     <ContactContainer id="contact">
       <ContactContent>
         <SectionTitle
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          ESTABLISH CONNECTION
+          Get In Touch
         </SectionTitle>
-        
+
         <ContactGrid>
           <ContactInfo
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <ContactTitle>Transmission Details</ContactTitle>
-            
+            <ContactTitle>Contact Information</ContactTitle>
+
             {contactInfo.map((item, index) => (
               <ContactItem
                 key={item.label}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -15 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
                 viewport={{ once: true }}
               >
+                <ContactDot />
                 <strong>{item.label}:</strong>&nbsp;{item.value}
               </ContactItem>
             ))}
-            
-            <div style={{ marginTop: '2rem' }}>
-              <p style={{ color: '#c0c0c0', lineHeight: 1.6 }}>
-                Ready to transform your ideas into reality? Send me a transmission 
-                and let's discuss how we can work together to create something extraordinary.
+
+            <div style={{ marginTop: '1.5rem' }}>
+              <p style={{ color: '#B0B8C4', lineHeight: 1.7, fontSize: '0.95rem' }}>
+                Ready to bring your ideas to life? Send me a message
+                and let us discuss how we can work together to create something great.
               </p>
             </div>
-            
+
             <SocialLinks>
               <SocialLink
                 href="mailto:learnerbisoyi@gmail.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
                 title="Email"
               >
-                📧
+                <SocialIcon viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </SocialIcon>
               </SocialLink>
               <SocialLink
                 href="https://www.linkedin.com/in/aditya-raj-bisoyi-a82154328/"
                 target="_blank"
                 rel="noopener noreferrer"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
                 title="LinkedIn"
               >
-                💼
+                <SocialIcon viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                </SocialIcon>
               </SocialLink>
               <SocialLink
                 href="https://github.com/adityarajbisoyi"
                 target="_blank"
                 rel="noopener noreferrer"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
                 title="GitHub"
               >
-                🐙
+                <SocialIcon viewBox="0 0 24 24">
+                  <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/>
+                </SocialIcon>
               </SocialLink>
             </SocialLinks>
           </ContactInfo>
-          
+
           <ContactForm
             onSubmit={handleSubmit}
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <ContactTitle>Send Transmission</ContactTitle>
-            
+            <ContactTitle>Send a Message</ContactTitle>
+
             <FormGroup>
-              <Label htmlFor="name">Designation</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
                 type="text"
                 id="name"
@@ -376,9 +355,9 @@ const Contact = () => {
                 required
               />
             </FormGroup>
-            
+
             <FormGroup>
-              <Label htmlFor="email">Communication Channel</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 type="email"
                 id="email"
@@ -389,9 +368,9 @@ const Contact = () => {
                 required
               />
             </FormGroup>
-            
+
             <FormGroup>
-              <Label htmlFor="subject">Mission Objective</Label>
+              <Label htmlFor="subject">Subject</Label>
               <Input
                 type="text"
                 id="subject"
@@ -402,9 +381,9 @@ const Contact = () => {
                 required
               />
             </FormGroup>
-            
+
             <FormGroup>
-              <Label htmlFor="message">Mission Briefing</Label>
+              <Label htmlFor="message">Message</Label>
               <TextArea
                 id="message"
                 name="message"
@@ -414,14 +393,14 @@ const Contact = () => {
                 required
               />
             </FormGroup>
-            
+
             <SubmitButton
               type="submit"
               disabled={isSubmitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              {isSubmitting ? 'TRANSMITTING...' : 'SEND TRANSMISSION'}
+              {isSubmitting ? 'Sending...' : 'Send Message'}
             </SubmitButton>
           </ContactForm>
         </ContactGrid>

@@ -1,8 +1,5 @@
 import { motion } from 'framer-motion'
-import { Canvas } from '@react-three/fiber'
-import styled from 'styled-components'
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import styled, { keyframes } from 'styled-components'
 
 const LoadingContainer = styled(motion.div)`
   position: fixed;
@@ -10,7 +7,7 @@ const LoadingContainer = styled(motion.div)`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(ellipse at center, #0d1421 0%, #000000 100%);
+  background: #0D0D0D;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,251 +16,228 @@ const LoadingContainer = styled(motion.div)`
   overflow: hidden;
 `
 
-const AlienTextBackground = styled.div`
+const gridPulse = keyframes`
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+`
+
+const GridBackground = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  opacity: 0.4;
-  z-index: 1;
-  will-change: transform;
-  transform: translateZ(0);
+  background-image: 
+    linear-gradient(rgba(91, 164, 230, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 164, 230, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: ${gridPulse} 3s ease-in-out infinite;
 `
 
-const AlienTextLine = styled(motion.div)`
-  position: absolute;
-  white-space: nowrap;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  color: ${props => props.theme.colors.primary};
-  text-shadow: 0 0 5px ${props => props.theme.colors.primary};
-  letter-spacing: 2px;
-  opacity: 0.6;
-  will-change: transform;
-  transform: translateZ(0);
+const LogoContainer = styled(motion.div)`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  z-index: 2;
 `
 
-const LoadingText = styled(motion.h1)`
-  font-size: 2rem;
-  color: ${props => props.theme.colors.primary};
-  text-shadow: 
-    0 0 10px ${props => props.theme.colors.primary},
-    0 0 20px ${props => props.theme.colors.primary},
-    0 0 30px ${props => props.theme.colors.primary};
-  margin-bottom: 2rem;
-  font-weight: 900;
-  letter-spacing: 3px;
-`
-
-const CanvasContainer = styled.div`
-  width: 400px;
-  height: 400px;
-  margin-bottom: 2rem;
-`
-
-function Gear({ position, rotation, scale = 1 }) {
-  const meshRef = useRef()
+const Initials = styled(motion.div)`
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: #FFFFFF;
+  position: relative;
   
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.z += delta * 2
-    }
-  })
-
-  return (
-    <mesh ref={meshRef} position={position} rotation={rotation}>
-      <cylinderGeometry args={[1 * scale, 1 * scale, 0.2 * scale, 12]} />
-      <meshStandardMaterial 
-        color="#00ffff"
-        metalness={0.8}
-        roughness={0.2}
-        emissive="#00ffff"
-        emissiveIntensity={0.2}
-      />
-    </mesh>
-  )
-}
-
-function CubeFormation() {
-  const groupRef = useRef()
-  
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.5
-      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.2
-    }
-  })
-
-  const cubePositions = [
-    // Front face
-    [-1, 1, 1], [0, 1, 1], [1, 1, 1],
-    [-1, 0, 1], [0, 0, 1], [1, 0, 1],
-    [-1, -1, 1], [0, -1, 1], [1, -1, 1],
-    
-    // Back face
-    [-1, 1, -1], [0, 1, -1], [1, 1, -1],
-    [-1, 0, -1], [0, 0, -1], [1, 0, -1],
-    [-1, -1, -1], [0, -1, -1], [1, -1, -1],
-    
-    // Middle layer
-    [-1, 1, 0], [0, 1, 0], [1, 1, 0],
-    [-1, 0, 0], [1, 0, 0],
-    [-1, -1, 0], [0, -1, 0], [1, -1, 0],
-  ]
-
-  return (
-    <group ref={groupRef}>
-      {cubePositions.map((position, index) => (
-        <Gear 
-          key={index}
-          position={position}
-          rotation={[0, 0, index * 0.1]}
-          scale={0.3}
-        />
-      ))}
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#00ffff" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff6b35" />
-    </group>
-  )
-}
-
-function AlienTextStream() {
-  const alienSymbols = [
-    '◊◉◈◇◆▲▼◀▶△▽▷◁',
-    '⟨⟩⟪⟫⟬⟭⟮⟯⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽⟾⟿',
-    '⧀⧁⧂⧃⧄⧅⧆⧇⧈⧉⧊⧋⧌⧍⧎⧏⧐⧑⧒⧓⧔⧕⧖⧗⧘⧙⧚⧛⧜⧝⧞⧟',
-    '⨀⨁⨂⨃⨄⨅⨆⨇⨈⨉⨊⨋⨌⨍⨎⨏⨐⨑⨒⨓⨔⨕⨖⨗⨘⨙⨚⨛⨜⨝⨞⨟',
-    '⬟⬠⬡⬢⬣⬤⬥⬦⬧⬨⬩⬪⬫⬬⬭⬮⬯⬰⬱⬲⬳⬴⬵⬶⬷⬸⬹⬺⬻⬼⬽⬾⬿',
-    '⫷⫸⫹⫺⫻⫼⫽⫾⫿⬀⬁⬂⬃⬄⬅⬆⬇⬈⬉⬊⬋⬌⬍⬎⬏⬐⬑⬒⬓⬔⬕⬖⬗',
-    '╭╮╯╰╱╲╳╴╵╶╷╸╹╺╻╼╽╾╿▀▁▂▃▄▅▆▇█▉▊▋▌▍▎▏',
-    '░▒▓█▇▆▅▄▃▂▁▪▫◦•∘○●◯◉⦿⦾⊙⊚⊛⊜⊝⊞⊟⊠⊡⊢⊣⊤⊥⊦⊧⊨⊩⊪⊫⊬⊭⊮⊯'
-  ]
-
-  const generateRandomText = () => {
-    const symbolSet = alienSymbols[Math.floor(Math.random() * alienSymbols.length)]
-    let text = ''
-    for (let i = 0; i < 20 + Math.random() * 30; i++) {
-      text += symbolSet[Math.floor(Math.random() * symbolSet.length)] + ' '
-    }
-    return text
+  @media (max-width: 768px) {
+    font-size: 3rem;
+    letter-spacing: 6px;
   }
+`
 
-  // Moving lines
-  const movingLines = Array.from({ length: 15 }, (_, index) => ({
-    id: `moving-${index}`,
-    text: generateRandomText(),
-    top: Math.random() * 100,
-    speed: 20 + Math.random() * 30,
-    opacity: 0.4 + Math.random() * 0.3
-  }))
+const InitialLetter = styled(motion.span)`
+  display: inline-block;
+  position: relative;
+`
 
-  // Static scattered text
-  const staticLines = Array.from({ length: 20 }, (_, index) => ({
-    id: `static-${index}`,
-    text: generateRandomText(),
-    top: Math.random() * 100,
-    left: Math.random() * 90,
-    opacity: 0.2 + Math.random() * 0.3
-  }))
+const glowLine = keyframes`
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+`
 
-  return (
-    <AlienTextBackground>
-      {/* Moving alien text lines */}
-      {movingLines.map((line) => (
-        <AlienTextLine
-          key={line.id}
-          style={{
-            top: `${line.top}%`,
-            opacity: line.opacity,
-            fontSize: `${10 + Math.random() * 8}px`,
-            left: 0
-          }}
-          animate={{
-            x: ["-20vw", "120vw"]
-          }}
-          transition={{
-            duration: line.speed,
-            repeat: Infinity,
-            ease: "linear",
-            delay: Math.random() * 15
-          }}
-        >
-          {line.text}
-        </AlienTextLine>
-      ))}
-      
-      {/* Static scattered alien text */}
-      {staticLines.map((line) => (
-        <AlienTextLine
-          key={line.id}
-          style={{
-            top: `${line.top}%`,
-            left: `${line.left}%`,
-            opacity: line.opacity,
-            fontSize: `${8 + Math.random() * 6}px`,
-            position: 'absolute'
-          }}
-          animate={{
-            opacity: [line.opacity * 0.5, line.opacity, line.opacity * 0.3],
-            scale: [1, 1.1, 0.9]
-          }}
-          transition={{
-            duration: 3 + Math.random() * 4,
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: Math.random() * 10
-          }}
-        >
-          {line.text.substring(0, 15 + Math.random() * 20)}
-        </AlienTextLine>
-      ))}
-    </AlienTextBackground>
-  )
+const Underline = styled(motion.div)`
+  width: 120px;
+  height: 2px;
+  background: ${props => props.theme.colors.primary};
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, #FFFFFF, transparent);
+    animation: ${glowLine} 1.5s ease-in-out infinite;
+  }
+`
+
+const LoadingBarContainer = styled(motion.div)`
+  width: 200px;
+  height: 2px;
+  background: rgba(91, 164, 230, 0.15);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 1rem;
+  
+  @media (max-width: 768px) {
+    width: 160px;
+  }
+`
+
+const pulse = keyframes`
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+`
+
+const LoadingBarFill = styled.div`
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #5BA4E6, transparent);
+  animation: ${pulse} 1.5s ease-in-out infinite;
+`
+
+const StatusText = styled(motion.p)`
+  font-size: 0.75rem;
+  color: ${props => props.theme.colors.grey};
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 1.5rem;
+  font-weight: 500;
+`
+
+const cornerFloat = keyframes`
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+`
+
+const CornerAccent = styled.div`
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-color: rgba(91, 164, 230, 0.2);
+  border-style: solid;
+  animation: ${cornerFloat} 3s ease-in-out infinite;
+  
+  &.top-left {
+    top: 40px;
+    left: 40px;
+    border-width: 2px 0 0 2px;
+  }
+  
+  &.top-right {
+    top: 40px;
+    right: 40px;
+    border-width: 2px 2px 0 0;
+    animation-delay: 0.5s;
+  }
+  
+  &.bottom-left {
+    bottom: 40px;
+    left: 40px;
+    border-width: 0 0 2px 2px;
+    animation-delay: 1s;
+  }
+  
+  &.bottom-right {
+    bottom: 40px;
+    right: 40px;
+    border-width: 0 2px 2px 0;
+    animation-delay: 1.5s;
+  }
+`
+
+const letterVariants = {
+  hidden: { 
+    y: 40, 
+    opacity: 0,
+    filter: 'blur(8px)'
+  },
+  visible: (i) => ({
+    y: 0,
+    opacity: 1,
+    filter: 'blur(0px)',
+    transition: {
+      delay: i * 0.15,
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  })
 }
 
 const LoadingScreen = () => {
+  const letters = ['A', 'R', 'B']
+
   return (
     <LoadingContainer
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
+      exit={{ 
+        opacity: 0,
+        scale: 1.05,
+        filter: 'blur(10px)',
+        transition: { duration: 0.5, ease: 'easeInOut' }
+      }}
     >
-      <AlienTextStream />
+      <GridBackground />
       
-      <LoadingText
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5, duration: 1 }}
-        style={{ zIndex: 10, position: 'relative' }}
-      >
-        INITIALIZING...
-      </LoadingText>
+      <CornerAccent className="top-left" />
+      <CornerAccent className="top-right" />
+      <CornerAccent className="bottom-left" />
+      <CornerAccent className="bottom-right" />
       
-      <CanvasContainer style={{ zIndex: 10, position: 'relative' }}>
-        <Canvas camera={{ position: [5, 5, 5], fov: 60 }}>
-          <CubeFormation />
-        </Canvas>
-      </CanvasContainer>
-      
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 1, duration: 1, repeat: Infinity, repeatType: "reverse" }}
-        style={{
-          width: '100px',
-          height: '4px',
-          background: 'linear-gradient(90deg, #00ffff, #ff6b35, #00ffff)',
-          borderRadius: '2px',
-          boxShadow: '0 0 20px #00ffff',
-          zIndex: 10,
-          position: 'relative'
-        }}
-      />
+      <LogoContainer>
+        <Initials>
+          {letters.map((letter, i) => (
+            <InitialLetter
+              key={letter}
+              custom={i}
+              variants={letterVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {letter}
+            </InitialLetter>
+          ))}
+        </Initials>
+        
+        <Underline
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: 120, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        />
+        
+        <LoadingBarContainer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          <LoadingBarFill />
+        </LoadingBarContainer>
+        
+        <StatusText
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.5 }}
+        >
+          Loading
+        </StatusText>
+      </LogoContainer>
     </LoadingContainer>
   )
 }

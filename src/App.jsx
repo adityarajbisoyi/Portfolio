@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components'
 import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
@@ -6,6 +6,8 @@ import Portfolio from './components/Portfolio'
 import ChatBot from './components/ChatBot'
 
 const GlobalStyle = createGlobalStyle`
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
   * {
     margin: 0;
     padding: 0;
@@ -13,67 +15,83 @@ const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    font-family: 'Orbitron', 'Arial', sans-serif;
-    background: radial-gradient(ellipse at center, #0d1421 0%, #000000 100%);
-    color: #00ffff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0D0D0D;
+    color: #F5F5F5;
     overflow-x: hidden;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+  html {
+    scroll-behavior: smooth;
+  }
 `
 
 const theme = {
   colors: {
-    primary: '#00ffff',
-    secondary: '#ff6b35',
-    accent: '#ffd700',
-    dark: '#0d1421',
-    darker: '#000000',
-    metallic: '#c0c0c0',
-    neon: '#00ff41'
+    primary: '#5BA4E6',
+    primaryLight: '#7BB8F0',
+    primaryDark: '#3A7BC8',
+    grey: '#B0B8C4',
+    greyLight: '#D1D5DB',
+    greyDark: '#6B7280',
+    dark: '#0D0D0D',
+    darkAlt: '#1A1A2E',
+    darkCard: '#16162A',
+    white: '#FFFFFF',
+    offWhite: '#F5F5F5',
+    border: 'rgba(91, 164, 230, 0.15)',
+    cardBg: 'rgba(22, 22, 42, 0.6)',
   },
   fonts: {
-    main: 'Orbitron, Arial, sans-serif'
+    main: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   }
 }
 
 const AppContainer = styled.div`
   position: relative;
   min-height: 100vh;
-  background: radial-gradient(ellipse at center, #0d1421 0%, #000000 100%);
-  
-  &::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 255, 255, 0.03) 2px,
-        rgba(0, 255, 255, 0.03) 4px
-      );
-    pointer-events: none;
-    z-index: 1;
-  }
+  background: #0D0D0D;
 `
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
+  const [isContentReady, setIsContentReady] = useState(false)
+  const timerRef = useRef(null)
+
+  const handleLoadingComplete = useCallback(() => {
+    setIsLoading(false)
+    // Small delay for skeleton to appear before content
+    timerRef.current = setTimeout(() => setIsContentReady(true), 100)
+  }, [])
 
   useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 4000)
+    const handlePageLoad = () => {
+      // Wait for fonts and critical resources
+      if (document.fonts) {
+        document.fonts.ready.then(() => {
+          handleLoadingComplete()
+        })
+      } else {
+        handleLoadingComplete()
+      }
+    }
 
-    return () => clearTimeout(timer)
-  }, [])
+    if (document.readyState === 'complete') {
+      handlePageLoad()
+    } else {
+      window.addEventListener('load', handlePageLoad)
+    }
+
+    return () => {
+      window.removeEventListener('load', handlePageLoad)
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [handleLoadingComplete])
 
   return (
     <ThemeProvider theme={theme}>
@@ -83,7 +101,7 @@ function App() {
           {isLoading ? (
             <LoadingScreen key="loading" />
           ) : (
-            <Portfolio key="portfolio" />
+            <Portfolio key="portfolio" isContentReady={isContentReady} />
           )}
         </AnimatePresence>
         {!isLoading && <ChatBot />}
