@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 const ProjectsContainer = styled.section`
   padding: 6rem 2rem;
-  background: rgba(0, 0, 0, 0.9);
+  background: ${props => props.theme.colors.darkAlt};
   position: relative;
 `
 
@@ -16,13 +16,13 @@ const ProjectsContent = styled.div`
 `
 
 const SectionTitle = styled(motion.h2)`
-  font-size: 3rem;
-  font-weight: 900;
+  font-size: 2.5rem;
+  font-weight: 800;
   text-align: center;
   margin-bottom: 3rem;
-  color: ${props => props.theme.colors.primary};
-  text-shadow: 0 0 20px ${props => props.theme.colors.primary};
-  
+  color: ${props => props.theme.colors.white};
+  letter-spacing: -0.5px;
+
   @media (max-width: 768px) {
     font-size: 2rem;
   }
@@ -30,82 +30,43 @@ const SectionTitle = styled(motion.h2)`
 
 const ProjectsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 2rem;
-  margin-top: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `
 
 const ProjectCard = styled(motion.div)`
-  background: rgba(13, 20, 33, 0.8);
-  border: 1px solid ${props => props.theme.colors.primary};
+  background: ${props => props.theme.colors.cardBg};
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 12px;
   overflow: hidden;
-  position: relative;
   transition: all 0.3s ease;
-  
+
   &:hover {
-    box-shadow: 
-      0 0 30px ${props => props.theme.colors.primary},
-      inset 0 0 30px rgba(0, 255, 255, 0.1);
-    transform: translateY(-5px);
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      linear-gradient(
-        135deg,
-        transparent 30%,
-        rgba(0, 255, 255, 0.05) 50%,
-        transparent 70%
-      );
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  &:hover::before {
-    opacity: 1;
+    border-color: ${props => props.theme.colors.primary};
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
   }
 `
 
 const ProjectImage = styled.div`
-  height: 200px;
-  background: linear-gradient(135deg, 
-    rgba(0, 255, 255, 0.2) 0%, 
-    rgba(255, 107, 53, 0.2) 100%
+  height: 180px;
+  background: linear-gradient(135deg,
+    rgba(91, 164, 230, 0.08) 0%,
+    rgba(91, 164, 230, 0.15) 100%
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  color: ${props => props.theme.colors.primary};
-  text-shadow: 0 0 10px ${props => props.theme.colors.primary};
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${props => props.theme.colors.grey};
   position: relative;
-  overflow: hidden;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.1), 
-      transparent
-    );
-    transition: left 0.5s;
-  }
-  
-  &:hover::after {
-    left: 100%;
-  }
+  border-bottom: 1px solid ${props => props.theme.colors.border};
 `
 
 const ProjectContent = styled.div`
@@ -113,32 +74,34 @@ const ProjectContent = styled.div`
 `
 
 const ProjectTitle = styled.h3`
-  font-size: 1.5rem;
-  color: ${props => props.theme.colors.primary};
-  margin-bottom: 1rem;
-  text-shadow: 0 0 10px ${props => props.theme.colors.primary};
+  font-size: 1.25rem;
+  color: ${props => props.theme.colors.white};
+  margin-bottom: 0.75rem;
+  font-weight: 600;
 `
 
 const ProjectDescription = styled.p`
-  color: ${props => props.theme.colors.metallic};
+  color: ${props => props.theme.colors.grey};
   line-height: 1.6;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
 `
 
 const TechStack = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 `
 
 const TechTag = styled.span`
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid ${props => props.theme.colors.primary};
+  background: rgba(91, 164, 230, 0.08);
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 4px;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.625rem;
   font-size: 0.8rem;
   color: ${props => props.theme.colors.primary};
+  font-weight: 500;
 `
 
 const ProjectStats = styled.div`
@@ -146,26 +109,13 @@ const ProjectStats = styled.div`
   gap: 1rem;
   margin-bottom: 1rem;
   font-size: 0.8rem;
-  color: ${props => props.theme.colors.metallic};
+  color: ${props => props.theme.colors.grey};
 `
 
 const ProjectStat = styled.span`
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  
-  &::before {
-    content: '⭐';
-    color: ${props => props.theme.colors.accent};
-  }
-  
-  &:nth-child(2)::before {
-    content: '🔀';
-  }
-  
-  &:nth-child(3)::before {
-    content: '📅';
-  }
 `
 
 const LoadingSpinner = styled(motion.div)`
@@ -173,20 +123,21 @@ const LoadingSpinner = styled(motion.div)`
   justify-content: center;
   align-items: center;
   height: 200px;
-  color: ${props => props.theme.colors.primary};
-  font-size: 1.2rem;
-  
+  color: ${props => props.theme.colors.grey};
+  font-size: 1rem;
+  grid-column: 1 / -1;
+
   &::before {
     content: '';
-    width: 40px;
-    height: 40px;
-    border: 3px solid transparent;
-    border-top: 3px solid ${props => props.theme.colors.primary};
+    width: 32px;
+    height: 32px;
+    border: 2px solid ${props => props.theme.colors.border};
+    border-top-color: ${props => props.theme.colors.primary};
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
     margin-right: 1rem;
   }
-  
+
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -195,67 +146,52 @@ const LoadingSpinner = styled(motion.div)`
 
 const ProjectLinks = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
 `
 
 const ProjectLink = styled(motion.a)`
-  background: linear-gradient(45deg, 
-    ${props => props.theme.colors.primary}, 
-    ${props => props.theme.colors.secondary}
-  );
+  background: ${props => props.theme.colors.primary};
   color: ${props => props.theme.colors.dark};
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
-  font-weight: bold;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.3), 
-      transparent
-    );
-    transition: left 0.5s;
-  }
-  
-  &:hover::before {
-    left: 100%;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: ${props => props.theme.colors.primaryLight};
   }
 `
 
 const FilterButtons = styled.div`
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-bottom: 2rem;
   flex-wrap: wrap;
 `
 
 const FilterButton = styled(motion.button)`
-  background: ${props => props.active ? 
-    `linear-gradient(45deg, ${props.theme.colors.primary}, ${props.theme.colors.secondary})` :
-    'rgba(0, 255, 255, 0.1)'
+  background: ${props => props.$active ?
+    props.theme.colors.primary :
+    'rgba(91, 164, 230, 0.08)'
   };
-  border: 1px solid ${props => props.theme.colors.primary};
+  border: 1px solid ${props => props.$active ?
+    props.theme.colors.primary :
+    props.theme.colors.border
+  };
   border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  color: ${props => props.active ? props.theme.colors.dark : props.theme.colors.primary};
-  font-weight: bold;
+  padding: 0.625rem 1.25rem;
+  color: ${props => props.$active ? props.theme.colors.dark : props.theme.colors.grey};
+  font-weight: 500;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  
+  transition: all 0.2s ease;
+
   &:hover {
-    box-shadow: 0 0 15px ${props => props.theme.colors.primary};
+    border-color: ${props => props.theme.colors.primary};
+    color: ${props => props.$active ? props.theme.colors.dark : props.theme.colors.white};
   }
 `
 
@@ -264,7 +200,6 @@ const Projects = () => {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Specific repositories to showcase
   const SPECIFIC_REPOS = [
     'a4fitness',
     'Space-Station-Proximity',
@@ -275,10 +210,8 @@ const Projects = () => {
     'herbalGarden'
   ]
 
-  // GitHub API integration for specific repos
   const fetchGitHubProjects = async () => {
     try {
-      // Due to GitHub API rate limiting, use fallback data directly
       console.log('Using fallback project data due to GitHub API limitations')
       setProjects(getFallbackProjects())
       setLoading(false)
@@ -289,7 +222,6 @@ const Projects = () => {
     }
   }
 
-  // Fallback project data if GitHub API fails
   const getFallbackProjects = () => {
     return [
       {
@@ -299,7 +231,7 @@ const Projects = () => {
         tech: ['HTML', 'CSS', 'JavaScript'],
         category: 'Web Development',
         githubUrl: 'https://github.com/adityarajbisoyi/a4fitness',
-        image: 'GitHub Project'
+        image: 'Web Application'
       },
       {
         id: 2,
@@ -308,7 +240,7 @@ const Projects = () => {
         tech: ['Python', 'JavaScript'],
         category: 'Simulation',
         githubUrl: 'https://github.com/adityarajbisoyi/Space-Station-Proximity',
-        image: 'GitHub Project'
+        image: 'Simulation'
       },
       {
         id: 3,
@@ -317,7 +249,7 @@ const Projects = () => {
         tech: ['HTML', 'CSS', 'JavaScript'],
         category: 'Games',
         githubUrl: 'https://github.com/adityarajbisoyi/Quiz-Game',
-        image: 'GitHub Project'
+        image: 'Game'
       },
       {
         id: 4,
@@ -326,7 +258,7 @@ const Projects = () => {
         tech: ['Python', 'JavaScript'],
         category: 'Data & Systems',
         githubUrl: 'https://github.com/adityarajbisoyi/data-collectionand-asset-collection',
-        image: 'GitHub Project'
+        image: 'Data System'
       },
       {
         id: 5,
@@ -335,7 +267,7 @@ const Projects = () => {
         tech: ['Python', 'C++'],
         category: 'Data & Systems',
         githubUrl: 'https://github.com/adityarajbisoyi/Data-Transmission-Protocols',
-        image: 'GitHub Project'
+        image: 'Protocols'
       },
       {
         id: 6,
@@ -344,7 +276,7 @@ const Projects = () => {
         tech: ['HTML', 'CSS', 'JavaScript'],
         category: 'Games',
         githubUrl: 'https://github.com/adityarajbisoyi/Simon-Game-Hard-Verison',
-        image: 'GitHub Project'
+        image: 'Game'
       },
       {
         id: 7,
@@ -353,95 +285,93 @@ const Projects = () => {
         tech: ['HTML', 'CSS', 'JavaScript'],
         category: 'Web Development',
         githubUrl: 'https://github.com/adityarajbisoyi/herbalGarden',
-        image: 'GitHub Project'
+        image: 'Web Application'
       }
     ]
   }
 
   const categories = ['All', 'Web Development', 'Games', 'Data & Systems', 'Simulation']
 
-  // Fetch GitHub projects on component mount
   useEffect(() => {
     fetchGitHubProjects()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredProjects = activeFilter === 'All' 
-    ? projects 
+  const filteredProjects = activeFilter === 'All'
+    ? projects
     : projects.filter(project => project.category === activeFilter)
 
   return (
     <ProjectsContainer id="projects">
       <ProjectsContent>
         <SectionTitle
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          MISSION ARCHIVES
+          Projects
         </SectionTitle>
-        
+
         <FilterButtons>
           {categories.map((category) => (
             <FilterButton
               key={category}
-              active={activeFilter === category}
+              $active={activeFilter === category}
               onClick={() => setActiveFilter(category)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               {category}
             </FilterButton>
           ))}
         </FilterButtons>
-        
+
         <ProjectsGrid>
           {loading ? (
             <LoadingSpinner
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.3 }}
             >
-              Loading GitHub Projects...
+              Loading Projects...
             </LoadingSpinner>
           ) : (
             filteredProjects.map((project, index) => (
-            <ProjectCard
-              key={project.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <ProjectImage>
-                {project.image}
-              </ProjectImage>
-              
-              <ProjectContent>
-                <ProjectTitle>{project.title}</ProjectTitle>
-                <ProjectDescription>{project.description}</ProjectDescription>
-                
-                <TechStack>
-                  {project.tech.map((tech) => (
-                    <TechTag key={tech}>{tech}</TechTag>
-                  ))}
-                </TechStack>
-                
-                <ProjectLinks>
-                  <ProjectLink
-                    href={project.githubUrl || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Source Code
-                  </ProjectLink>
-                </ProjectLinks>
-              </ProjectContent>
-            </ProjectCard>
-          ))
+              <ProjectCard
+                key={project.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                viewport={{ once: true }}
+              >
+                <ProjectImage>
+                  {project.image}
+                </ProjectImage>
+
+                <ProjectContent>
+                  <ProjectTitle>{project.title}</ProjectTitle>
+                  <ProjectDescription>{project.description}</ProjectDescription>
+
+                  <TechStack>
+                    {project.tech.map((tech) => (
+                      <TechTag key={tech}>{tech}</TechTag>
+                    ))}
+                  </TechStack>
+
+                  <ProjectLinks>
+                    <ProjectLink
+                      href={project.githubUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      Source Code
+                    </ProjectLink>
+                  </ProjectLinks>
+                </ProjectContent>
+              </ProjectCard>
+            ))
           )}
         </ProjectsGrid>
       </ProjectsContent>
