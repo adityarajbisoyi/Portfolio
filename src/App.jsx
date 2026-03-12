@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components'
 import { AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
@@ -59,11 +59,12 @@ const AppContainer = styled.div`
 function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isContentReady, setIsContentReady] = useState(false)
+  const timerRef = useRef(null)
 
   const handleLoadingComplete = useCallback(() => {
     setIsLoading(false)
     // Small delay for skeleton to appear before content
-    setTimeout(() => setIsContentReady(true), 100)
+    timerRef.current = setTimeout(() => setIsContentReady(true), 100)
   }, [])
 
   useEffect(() => {
@@ -82,7 +83,13 @@ function App() {
       handlePageLoad()
     } else {
       window.addEventListener('load', handlePageLoad)
-      return () => window.removeEventListener('load', handlePageLoad)
+    }
+
+    return () => {
+      window.removeEventListener('load', handlePageLoad)
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
     }
   }, [handleLoadingComplete])
 
