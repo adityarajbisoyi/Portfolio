@@ -1,4 +1,4 @@
-/* Transformers Portfolio - Global Styles */
+/* Professional Portfolio - Global Styles */
 * {
   margin: 0;
   padding: 0;
@@ -6,11 +6,13 @@
 }
 
 body {
-  font-family: 'Orbitron', 'Arial', sans-serif;
-  background: radial-gradient(ellipse at center, #0d1421 0%, #000000 100%);
-  color: #00ffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0D0D0D;
+  color: #F5F5F5;
   overflow-x: hidden;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Smooth scrolling */
@@ -20,20 +22,20 @@ html {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(13, 20, 33, 0.5);
+  background: #1A1A2E;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #00ffff, #ff6b35);
-  border-radius: 4px;
+  background: #5BA4E6;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #ff6b35, #00ffff);
+  background: #7BB8F0;
 }
 
 /* Focus styles for accessibility */
@@ -41,12 +43,12 @@ button:focus,
 input:focus,
 textarea:focus,
 a:focus {
-  outline: 2px solid #00ffff;
+  outline: 2px solid #5BA4E6;
   outline-offset: 2px;
 }
 
 /* Selection styles */
 ::selection {
-  background: rgba(0, 255, 255, 0.3);
-  color: #ffffff;
+  background: rgba(91, 164, 230, 0.3);
+  color: #FFFFFF;
 }
