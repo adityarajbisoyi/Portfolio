@@ -188,7 +188,7 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <HolographicProfile profileImage="/Portfolio/profile.jpg" />
+            <HolographicProfile profileImage="/profile.jpg" />
           </motion.div>
 
           <NameText
