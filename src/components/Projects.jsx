@@ -1,6 +1,20 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import styled from 'styled-components'
 import { useState, useEffect } from 'react'
+
+// Load image paths statically with Vite
+const imageModules = import.meta.glob('../assets/projects/*/*.{png,jpg,jpeg,svg,webp}', { eager: true })
+
+const getProjectImages = (folderName) => {
+  const images = []
+  for (const path in imageModules) {
+    // Looks for images in src/assets/projects/{folderName}/
+    if (path.includes(`../assets/projects/${folderName}/`)) {
+      images.push(imageModules[path].default)
+    }
+  }
+  return images
+}
 
 const ProjectsContainer = styled.section`
   padding: 6rem 2rem;
@@ -53,20 +67,70 @@ const ProjectCard = styled(motion.div)`
   }
 `
 
-const ProjectImage = styled.div`
-  height: 180px;
+const ProjectCarouselContainer = styled.div`
+  height: 220px;
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg,
     rgba(91, 164, 230, 0.08) 0%,
     rgba(91, 164, 230, 0.15) 100%
   );
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+`
+
+const CarouselImage = styled(motion.img)`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+`
+
+const CarouselButton = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(10, 15, 25, 0.7);
+  color: ${props => props.theme.colors.primary};
+  border: 1px solid ${props => props.theme.colors.primary};
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    background: ${props => props.theme.colors.primary};
+    color: ${props => props.theme.colors.dark};
+    box-shadow: 0 0 15px ${props => props.theme.colors.primary};
+  }
+
+  &.prev { left: 10px; }
+  &.next { right: 10px; }
+
+  & svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+`
+
+const EmptyImagePlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${props => props.theme.colors.primary};
   font-size: 0.9rem;
   font-weight: 500;
-  color: ${props => props.theme.colors.grey};
-  position: relative;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  text-shadow: 0 0 5px rgba(91, 164, 230, 0.5);
 `
 
 const ProjectContent = styled.div`
@@ -118,31 +182,6 @@ const ProjectStat = styled.span`
   gap: 0.25rem;
 `
 
-const LoadingSpinner = styled(motion.div)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  color: ${props => props.theme.colors.grey};
-  font-size: 1rem;
-  grid-column: 1 / -1;
-
-  &::before {
-    content: '';
-    width: 32px;
-    height: 32px;
-    border: 2px solid ${props => props.theme.colors.border};
-    border-top-color: ${props => props.theme.colors.primary};
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 1rem;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`
 
 const ProjectLinks = styled.div`
   display: flex;
@@ -195,110 +234,86 @@ const FilterButton = styled(motion.button)`
   }
 `
 
-const Projects = () => {
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const SPECIFIC_REPOS = [
-    'a4fitness',
-    'Space-Station-Proximity',
-    'Quiz-Game',
-    'data-collectionand-asset-collection',
-    'Data-Transmission-Protocols',
-    'Simon-Game-Hard-Verison',
-    'herbalGarden'
-  ]
-
-  const fetchGitHubProjects = async () => {
-    try {
-      console.log('Using fallback project data due to GitHub API limitations')
-      setProjects(getFallbackProjects())
-      setLoading(false)
-    } catch (error) {
-      console.error('Error loading projects:', error)
-      setProjects(getFallbackProjects())
-      setLoading(false)
-    }
-  }
-
-  const getFallbackProjects = () => {
-    return [
-      {
-        id: 1,
-        title: 'A4 Fitness',
-        description: 'A comprehensive fitness website with workout plans and health tracking features.',
-        tech: ['HTML', 'CSS', 'JavaScript'],
-        category: 'Web Development',
-        githubUrl: 'https://github.com/adityarajbisoyi/a4fitness',
-        image: 'Web Application'
-      },
-      {
-        id: 2,
-        title: 'Space Station Proximity',
-        description: 'A simulation project for space station proximity operations and calculations.',
-        tech: ['Python', 'JavaScript'],
-        category: 'Simulation',
-        githubUrl: 'https://github.com/adityarajbisoyi/Space-Station-Proximity',
-        image: 'Simulation'
-      },
-      {
-        id: 3,
-        title: 'Quiz Game',
-        description: 'An interactive quiz game with multiple categories and scoring system.',
-        tech: ['HTML', 'CSS', 'JavaScript'],
-        category: 'Games',
-        githubUrl: 'https://github.com/adityarajbisoyi/Quiz-Game',
-        image: 'Game'
-      },
-      {
-        id: 4,
-        title: 'Data Collection And Asset Collection',
-        description: 'A comprehensive data collection and asset management system.',
-        tech: ['Python', 'JavaScript'],
-        category: 'Data & Systems',
-        githubUrl: 'https://github.com/adityarajbisoyi/data-collectionand-asset-collection',
-        image: 'Data System'
-      },
-      {
-        id: 5,
-        title: 'Data Transmission Protocols',
-        description: 'Implementation of various data transmission protocols and communication systems.',
-        tech: ['Python', 'C++'],
-        category: 'Data & Systems',
-        githubUrl: 'https://github.com/adityarajbisoyi/Data-Transmission-Protocols',
-        image: 'Protocols'
-      },
-      {
-        id: 6,
-        title: 'Simon Game Hard Version',
-        description: 'An enhanced version of the classic Simon memory game with increased difficulty.',
-        tech: ['HTML', 'CSS', 'JavaScript'],
-        category: 'Games',
-        githubUrl: 'https://github.com/adityarajbisoyi/Simon-Game-Hard-Verison',
-        image: 'Game'
-      },
-      {
-        id: 7,
-        title: 'Herbal Garden',
-        description: 'A beautiful herbal garden website showcasing various plants and their benefits.',
-        tech: ['HTML', 'CSS', 'JavaScript'],
-        category: 'Web Development',
-        githubUrl: 'https://github.com/adityarajbisoyi/herbalGarden',
-        image: 'Web Application'
-      }
-    ]
-  }
-
-  const categories = ['All', 'Web Development', 'Games', 'Data & Systems', 'Simulation']
+const ProjectCarousel = ({ folderName }) => {
+  const images = getProjectImages(folderName);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    fetchGitHubProjects()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (images && images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prev => (prev + 1) % images.length);
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [images]);
+
+  if (!images || images.length === 0) {
+    return (
+      <ProjectCarouselContainer>
+        <EmptyImagePlaceholder>Awaiting Visuals - {folderName}</EmptyImagePlaceholder>
+      </ProjectCarouselContainer>
+    );
+  }
+
+  const nextSlide = () => setCurrentIndex(prev => (prev + 1) % images.length);
+  const prevSlide = () => setCurrentIndex(prev => (prev - 1 + images.length) % images.length);
+
+  return (
+    <ProjectCarouselContainer>
+      <AnimatePresence mode="wait">
+        <CarouselImage
+          key={currentIndex}
+          src={images[currentIndex]}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        />
+      </AnimatePresence>
+      {images.length > 1 && (
+        <>
+          <CarouselButton className="prev" onClick={prevSlide}>
+            <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+          </CarouselButton>
+          <CarouselButton className="next" onClick={nextSlide}>
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </CarouselButton>
+        </>
+      )}
+    </ProjectCarouselContainer>
+  );
+};
+
+const PROJECTS_DATA = [
+  {
+    id: 1,
+    title: 'Step Tracker',
+    folderName: 'StepTracker',
+    description: 'A multi-user step tracker with dashboards, leaderboard, competetive charts , Team support. Everything you need to achieve your target steps and covert your casual walk into a disciplined hobby.',
+    tech: ['Svelte','Hono','Cloudflare','Javascript','Tailwind'],
+    category: 'Productivity Tools',
+    deployedUrl: 'https://stepcounter-frontend.learnerbisoyi.workers.dev' // Update with real deployed links
+  },
+  {
+    id: 2,
+    title: 'Habibo',
+    folderName: 'Habibo',
+    description: 'A minimalist hobby tracker with detailed Insights and amazing Visual analytics',
+    tech: ['React','Hono','Cloudflare','Typescript','Tailwind'],
+    category: 'Productivity Tools',
+    deployedUrl: 'https://habibo.learnerbisoyi.workers.dev'
+  },
+
+]
+
+const Projects = () => {
+  const [activeFilter, setActiveFilter] = useState('All')
+
+  const categories = ['All', 'Games', 'Productivity Tools', 'Simulation']
 
   const filteredProjects = activeFilter === 'All'
-    ? projects
-    : projects.filter(project => project.category === activeFilter)
+    ? PROJECTS_DATA
+    : PROJECTS_DATA.filter(project => project.category === activeFilter)
 
   return (
     <ProjectsContainer id="projects">
@@ -327,52 +342,40 @@ const Projects = () => {
         </FilterButtons>
 
         <ProjectsGrid>
-          {loading ? (
-            <LoadingSpinner
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+          {filteredProjects.map((project, index) => (
+            <ProjectCard
+              key={project.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.08 }}
+              viewport={{ once: true }}
             >
-              Loading Projects...
-            </LoadingSpinner>
-          ) : (
-            filteredProjects.map((project, index) => (
-              <ProjectCard
-                key={project.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                viewport={{ once: true }}
-              >
-                <ProjectImage>
-                  {project.image}
-                </ProjectImage>
+              <ProjectCarousel folderName={project.folderName} />
 
-                <ProjectContent>
-                  <ProjectTitle>{project.title}</ProjectTitle>
-                  <ProjectDescription>{project.description}</ProjectDescription>
+              <ProjectContent>
+                <ProjectTitle>{project.title}</ProjectTitle>
+                <ProjectDescription>{project.description}</ProjectDescription>
 
-                  <TechStack>
-                    {project.tech.map((tech) => (
-                      <TechTag key={tech}>{tech}</TechTag>
-                    ))}
-                  </TechStack>
+                <TechStack>
+                  {project.tech.map((tech) => (
+                    <TechTag key={tech}>{tech}</TechTag>
+                  ))}
+                </TechStack>
 
-                  <ProjectLinks>
-                    <ProjectLink
-                      href={project.githubUrl || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      Source Code
-                    </ProjectLink>
+                <ProjectLinks>
+                  <ProjectLink
+                    href={project.deployedUrl || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Experience
+                  </ProjectLink>
                   </ProjectLinks>
                 </ProjectContent>
               </ProjectCard>
-            ))
-          )}
+            ))}
         </ProjectsGrid>
       </ProjectsContent>
     </ProjectsContainer>
