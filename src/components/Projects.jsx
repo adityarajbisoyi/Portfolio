@@ -307,7 +307,7 @@ const PROJECTS_DATA = [
     id: 3,
     title: 'Easiest Git and Github Visualizer',
     folderName: 'GitVisualizer',
-    description: 'An amazing and interactive visual interface to learn all the usefull concepts Git and Github through best possible meaningful simulation without doing setup.',
+    description: 'An amazing and interactive visual interface to learn all the usefull concepts of Git & Github through best possible meaningful simulation without doing setup.',
     tech: ['React','Cloudflare','Framer','Tailwind'],
     category: 'Simulation',
     deployedUrl: 'https://git-github-visualizer.learnerbisoyi.workers.dev'
