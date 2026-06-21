@@ -312,13 +312,22 @@ const PROJECTS_DATA = [
     category: 'Simulation',
     deployedUrl: 'https://git-github-visualizer.learnerbisoyi.workers.dev'
   },
+  {
+    id: 4,
+    title: 'Database Migrator',
+    folderName: 'dbmig',
+    description: 'A time saving tool where developers can migrate there PostgreSQL databases across different platforms, Export and Import data through excel, and preview data in minutes.',
+    tech: ['Flask','Python','React','PostgreSQL'],
+    category: 'Developer Utilities',
+    deployedUrl: 'https://witty-plant-027003000.7.azurestaticapps.net/'
+  },
 
 ]
 
 const Projects = () => {
   const [activeFilter, setActiveFilter] = useState('All')
 
-  const categories = ['All', 'Games', 'Productivity Tools', 'Simulation']
+  const categories = ['All', 'Games', 'Productivity Tools', 'Simulation', 'Developer Utilities']
 
   const filteredProjects = activeFilter === 'All'
     ? PROJECTS_DATA
