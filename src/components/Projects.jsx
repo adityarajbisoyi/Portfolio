@@ -273,10 +273,10 @@ const ProjectCarousel = ({ folderName }) => {
       {images.length > 1 && (
         <>
           <CarouselButton className="prev" onClick={prevSlide}>
-            <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" /></svg>
           </CarouselButton>
           <CarouselButton className="next" onClick={nextSlide}>
-            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" /></svg>
           </CarouselButton>
         </>
       )}
@@ -290,7 +290,7 @@ const PROJECTS_DATA = [
     title: 'Step Tracker',
     folderName: 'StepTracker',
     description: 'A multi-user step tracker with dashboards, leaderboard, competetive charts , Team support. Everything you need to achieve your target steps and covert your casual walk into a disciplined hobby.',
-    tech: ['Svelte','Hono','Cloudflare','Javascript','Tailwind'],
+    tech: ['Svelte', 'Hono', 'Cloudflare', 'Javascript', 'Tailwind'],
     category: 'Productivity Tools',
     deployedUrl: 'https://stepcounter-frontend.learnerbisoyi.workers.dev' // Update with real deployed links
   },
@@ -299,7 +299,7 @@ const PROJECTS_DATA = [
     title: 'Habibo',
     folderName: 'Habibo',
     description: 'A minimalist hobby tracker with detailed Insights and amazing Visual analytics',
-    tech: ['React','Hono','Cloudflare','Typescript','Tailwind'],
+    tech: ['React', 'Hono', 'Cloudflare', 'Typescript', 'Tailwind'],
     category: 'Productivity Tools',
     deployedUrl: 'https://habibo.learnerbisoyi.workers.dev'
   },
@@ -308,7 +308,7 @@ const PROJECTS_DATA = [
     title: 'Easiest Git and Github Visualizer',
     folderName: 'GitVisualizer',
     description: 'An amazing and interactive visual interface to learn all the usefull concepts of Git & Github through meaningful simulation without doing any setup.',
-    tech: ['React','Cloudflare','Framer','Tailwind'],
+    tech: ['React', 'Cloudflare', 'Framer', 'Tailwind'],
     category: 'Simulation',
     deployedUrl: 'https://git-github-visualizer.learnerbisoyi.workers.dev'
   },
@@ -317,9 +317,27 @@ const PROJECTS_DATA = [
     title: 'Database Migrator',
     folderName: 'dbmig',
     description: 'A time saving tool where developers can migrate there PostgreSQL databases across different platforms, Export and Import data through excel, and preview data in minutes.',
-    tech: ['Flask','Python','React','PostgreSQL'],
+    tech: ['Flask', 'Python', 'React', 'PostgreSQL'],
     category: 'Developer Utilities',
     deployedUrl: 'https://witty-plant-027003000.7.azurestaticapps.net/'
+  },
+  {
+    id: 5,
+    title: 'AI Form Builder',
+    folderName: 'AIFormBuilder',
+    description: 'Extremely usefull and quick tool when somewant to create survey form and manage them just by typing what they need',
+    tech: ['Groq', 'Python', 'React', 'D1SQLite'],
+    category: 'Productivity Tools',
+    deployedUrl: 'https://ai-form-builder-a4w.pages.dev'
+  },
+  {
+    id: 6,
+    title: 'TickKick',
+    folderName: 'TickKick',
+    description: 'Premium Looking todo tracker with minimalist design and all essentials',
+    tech: ['React'],
+    category: 'Productivity Tools',
+    deployedUrl: 'https://lemon-pebble-07c34c300.7.azurestaticapps.net'
   },
 
 ]
@@ -390,10 +408,10 @@ const Projects = () => {
                   >
                     Experience
                   </ProjectLink>
-                  </ProjectLinks>
-                </ProjectContent>
-              </ProjectCard>
-            ))}
+                </ProjectLinks>
+              </ProjectContent>
+            </ProjectCard>
+          ))}
         </ProjectsGrid>
       </ProjectsContent>
     </ProjectsContainer>
