@@ -155,21 +155,22 @@ const MessageBubble = styled.div`
   line-height: 1.5;
 
   &.user {
-    background: ${props => props.theme.colors.primary};
-    color: ${props => props.theme.colors.dark};
-    font-weight: 500;
+    background: #E8D5A3;
+    color: #0A0A0A;
+    font-weight: 600;
   }
 
   &.bot {
-    background: rgba(91, 164, 230, 0.08);
-    border: 1px solid ${props => props.theme.colors.border};
-    color: ${props => props.theme.colors.greyLight};
+    background: rgba(232, 213, 163, 0.08);
+    border: 1px solid rgba(232, 213, 163, 0.22);
+    color: #F0F0F0;
+    font-weight: 400;
   }
 `
 
 const ChatInput = styled.div`
   padding: 0.875rem 1rem;
-  border-top: 1px solid ${props => props.theme.colors.border};
+  border-top: 1px solid rgba(232, 213, 163, 0.15);
   display: flex;
   gap: 0.5rem;
 `
@@ -177,20 +178,21 @@ const ChatInput = styled.div`
 const InputField = styled.input`
   flex: 1;
   padding: 0.625rem 0.875rem;
-  background: rgba(91, 164, 230, 0.05);
-  border: 1px solid ${props => props.theme.colors.border};
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
-  color: ${props => props.theme.colors.white};
+  color: #FFFFFF;
   font-size: 0.875rem;
   font-family: inherit;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
+    border-color: #E8D5A3;
+    box-shadow: 0 0 10px rgba(232, 213, 163, 0.25);
   }
 
   &::placeholder {
-    color: ${props => props.theme.colors.greyDark};
+    color: #9E9E9E;
   }
 `
 

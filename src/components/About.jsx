@@ -1,214 +1,505 @@
-import { motion } from 'framer-motion'
-import styled from 'styled-components'
+import { motion, useInView } from 'framer-motion'
+import styled, { keyframes } from 'styled-components'
+import { useRef, useEffect, useState } from 'react'
 
-const AboutContainer = styled.section`
-  padding: 6rem 2rem;
-  background: ${props => props.theme.colors.dark};
-  position: relative;
+/* ─── Counter ─── */
+const useCounter = (target, duration = 1500, inView) => {
+  const [val, setVal] = useState(0)
+  const ran = useRef(false)
+  useEffect(() => {
+    if (!inView || ran.current) return
+    ran.current = true
+    const num = parseInt(target)
+    if (isNaN(num)) { setVal(target); return }
+    let start = null
+    const step = (ts) => {
+      if (!start) start = ts
+      const p = Math.min((ts - start) / duration, 1)
+      setVal(Math.floor((1 - Math.pow(1 - p, 3)) * num))
+      if (p < 1) requestAnimationFrame(step)
+      else setVal(target)
+    }
+    requestAnimationFrame(step)
+  }, [inView, target, duration])
+  return val
+}
+
+const CounterVal = ({ value }) => {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const count = useCounter(value, 1400, inView)
+  return <span ref={ref}>{count}</span>
+}
+
+/* ─── Keyframes ─── */
+const tickerScroll = keyframes`
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 `
 
-const AboutContent = styled.div`
-  max-width: 1200px;
+/* ─── Styles ─── */
+const AboutSection = styled.section`
+  padding: 8.5rem 2rem 6rem;
+  background: #0A0A0A;
+  position: relative;
+  overflow: hidden;
+  scroll-margin-top: 80px;
+
+  @media (max-width: 900px) { padding: 6.5rem 1.5rem 5rem; }
+  @media (max-width: 600px) { padding: 5rem 1.25rem 4rem; }
+`
+
+const AboutContainer = styled.div`
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
   z-index: 2;
 `
 
+const SectionTag = styled(motion.div)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #E8D5A3;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 28px;
+    height: 2px;
+    background: #E8D5A3;
+    flex-shrink: 0;
+  }
+`
+
 const SectionTitle = styled(motion.h2)`
-  font-size: 2.5rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 3rem;
-  color: ${props => props.theme.colors.white};
-  letter-spacing: -0.5px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.2rem, 5.5vw, 4rem);
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -1.5px;
+  line-height: 1.12;
+  margin-bottom: 3.5rem;
+  position: relative;
+  z-index: 2;
+  max-width: 820px;
 
-  @media (max-width: 768px) {
-    font-size: 2rem;
+  span {
+    color: #E8D5A3;
+    font-style: italic;
+    background: linear-gradient(135deg, #FFF6DC 0%, #E8D5A3 50%, #C4A96B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @media (max-width: 600px) {
+    margin-bottom: 2.5rem;
+    letter-spacing: -0.8px;
   }
 `
 
-const AboutGrid = styled.div`
+/* ─── Bento Grid ─── */
+const BentoGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  margin-bottom: 4rem;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 2;
 
-  @media (max-width: 768px) {
+  /* ── Desktop: 12-col ── */
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-areas:
+    "bio  bio  bio  bio  bio  bio  sk   sk   sk   sk   sk   sk "
+    "bio  bio  bio  bio  bio  bio  sk   sk   sk   sk   sk   sk "
+    "st1  st1  st1  st2  st2  st2  app  app  app  app  app  app"
+    "tkr  tkr  tkr  tkr  tkr  tkr  tkr  tkr  tkr  tkr  tkr  tkr";
+
+  /* ── Tablet ── */
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "bio  bio "
+      "sk   sk  "
+      "st1  st2 "
+      "app  app "
+      "tkr  tkr ";
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-areas:
+      "bio"
+      "sk "
+      "st1"
+      "st2"
+      "app"
+      "tkr";
   }
 `
 
-const AboutText = styled(motion.div)`
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: ${props => props.theme.colors.grey};
+/* ─── Base card ─── */
+const BentoCard = styled(motion.div)`
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2.25rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: all 0.3s ease;
 
-  p {
-    margin-bottom: 1.5rem;
+  &:hover {
+    border-color: rgba(232, 213, 163, 0.35);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.5);
   }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(232,213,163,0.06) 0%, transparent 65%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  &:hover::before { opacity: 1; }
 `
 
-const SkillsContainer = styled(motion.div)`
-  background: ${props => props.theme.colors.cardBg};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 12px;
-  padding: 2rem;
+/* ─── Named area cards ─── */
+const BiographyCard = styled(BentoCard)`
+  grid-area: bio;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `
 
-const SkillsTitle = styled.h3`
-  font-size: 1.25rem;
-  color: ${props => props.theme.colors.white};
-  margin-bottom: 1.5rem;
-  font-weight: 600;
+const SkillsCard = styled(BentoCard)`
+  grid-area: sk;
+  display: flex;
+  flex-direction: column;
 `
 
 const SkillsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 0.75rem;
-`
-
-const SkillItem = styled(motion.div)`
-  background: rgba(91, 164, 230, 0.06);
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  padding: 0.75rem;
-  text-align: center;
-  color: ${props => props.theme.colors.greyLight};
-  font-weight: 500;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: rgba(91, 164, 230, 0.12);
-    border-color: ${props => props.theme.colors.primary};
-    color: ${props => props.theme.colors.white};
-  }
-`
-
-const StatsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  margin-top: 4rem;
-`
 
-const StatItem = styled(motion.div)`
-  text-align: center;
-  padding: 2rem 1.5rem;
-  background: ${props => props.theme.colors.cardBg};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 12px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: ${props => props.theme.colors.primary};
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 `
 
-const StatNumber = styled.div`
-  font-size: 2.5rem;
+const Stat1Card = styled(BentoCard)`
+  grid-area: st1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`
+
+const Stat2Card = styled(BentoCard)`
+  grid-area: st2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`
+
+const ApproachCard = styled(BentoCard)`
+  grid-area: app;
+  padding: 1.8rem 2.25rem;
+`
+
+const TickerCard = styled(BentoCard)`
+  grid-area: tkr;
+  padding: 1.25rem 2.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  overflow: hidden;
+`
+
+/* ─── Card internals ─── */
+const CardTag = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #E8D5A3;
+  display: block;
+  margin-bottom: 0.9rem;
+`
+
+const CardTitle = styled.h3`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 1.15rem;
+`
+
+const AboutText = styled.div`
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: #D6D6D6;
+
+  p {
+    margin-bottom: 1.35rem;
+    &:last-child { margin-bottom: 0; }
+  }
+
+  strong {
+    color: #FFFFFF;
+    font-weight: 700;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+  }
+`
+
+/* ─── Stats ─── */
+const BigNumber = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.6rem, 4.5vw, 3.8rem);
   font-weight: 800;
-  color: ${props => props.theme.colors.primary};
+  color: #FFFFFF;
+  line-height: 1;
   margin-bottom: 0.5rem;
 `
 
-const StatLabel = styled.div`
-  font-size: 0.95rem;
-  color: ${props => props.theme.colors.grey};
-  font-weight: 500;
+const StatDesc = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.78rem;
+  color: #B8B8B8;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
 `
 
-const About = () => {
-  const skills = [
-    'React', 'Node.js', 'TypeScript', 'Python',
-    'MongoDB', 'PostgreSQL', 'Docker', 'AWS',
-    'Three.js', 'Next.js', 'GraphQL', 'Redis'
-  ]
+/* ─── Skills ─── */
+const skillDomains = [
+  { name: 'Frontend',  color: '#00E5CC', skills: ['React', 'Svelte', 'Next.js', 'Three.js', 'Framer'] },
+  { name: 'Backend',   color: '#E8D5A3', skills: ['Node.js', 'Hono', 'Flask', 'Python', 'GraphQL'] },
+  { name: 'Database',  color: '#c084fc', skills: ['PostgreSQL', 'MongoDB', 'D1 SQLite', 'Redis'] },
+  { name: 'Platform',  color: '#FF6B35', skills: ['Cloudflare', 'Docker', 'AWS', 'GitHub'] },
+]
 
-  const stats = [
-    { number: '20+', label: 'Quality Projects' },
-    { number: '2+', label: 'Years Experience' },
-    { number: '100%', label: 'Client Satisfaction' }
-  ]
+const DomainGroup = styled.div`
+  margin-bottom: 1.2rem;
+  &:last-child { margin-bottom: 0; }
+`
+
+const DomainLabel = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: ${p => p.$color};
+  margin-bottom: 0.55rem;
+`
+
+const PillRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+`
+
+const Pill = styled(motion.span)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.32rem 0.8rem;
+  border-radius: 100px;
+  background: ${p => p.$color}20;
+  border: 1px solid ${p => p.$color}55;
+  color: #FFFFFF;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  &:hover {
+    background: ${p => p.$color}35;
+    border-color: ${p => p.$color};
+    transform: translateY(-1px);
+  }
+`
+
+/* ─── Ticker ─── */
+const TickerLabel = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #E8D5A3;
+  white-space: nowrap;
+  flex-shrink: 0;
+`
+
+const TickerTrack = styled.div`
+  display: flex;
+  gap: 2.5rem;
+  animation: ${tickerScroll} 16s linear infinite;
+  white-space: nowrap;
+  width: max-content;
+`
+
+const TickerItem = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #D4D4D4;
+  letter-spacing: 0.6px;
+`
+
+const LEARNING = ['Rust', 'WebAssembly', 'Kubernetes', 'Go', 'Distributed Systems',
+                  'Rust', 'WebAssembly', 'Kubernetes', 'Go', 'Distributed Systems']
+
+/* ─── Component ─── */
+const About = () => {
+  const gridVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.07 } }
+  }
+  const cardVariants = {
+    hidden: { opacity: 0, y: 36 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22,1,0.36,1] } }
+  }
+
+  const spotlight = (e) => {
+    const c = e.currentTarget
+    const r = c.getBoundingClientRect()
+    c.style.setProperty('--mx', `${((e.clientX - r.left) / r.width)  * 100}%`)
+    c.style.setProperty('--my', `${((e.clientY - r.top)  / r.height) * 100}%`)
+  }
 
   return (
-    <AboutContainer id="about">
-      <AboutContent>
-        <SectionTitle
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+    <AboutSection id="about">
+      <AboutContainer>
+        <SectionTag
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
         >
-          About Me
+          Who I am
+        </SectionTag>
+
+        <SectionTitle
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          Building at the <span>intersection</span><br />
+          of craft and technology
         </SectionTitle>
 
-        <AboutGrid>
-          <AboutText
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <p>
-              I am a full-stack developer with a passion for creating innovative and efficient
-              solutions. My journey in the digital realm began with curiosity and evolved into
-              expertise across multiple technologies and frameworks.
-            </p>
-            <p>
-              I believe in using technology to solve real problems. Every line
-              of code I write is crafted with precision, performance, and user experience in mind.
-              I transform complex business requirements into elegant, scalable applications.
-            </p>
-            <p>
-              My mission is to bridge the gap between imagination and reality, creating digital
-              experiences that not only function flawlessly but also inspire and engage users.
-            </p>
-          </AboutText>
+        <BentoGrid
+          as={motion.div}
+          variants={gridVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+        >
+          {/* Biography */}
+          <BiographyCard variants={cardVariants} onMouseMove={spotlight}>
+            <CardTag>Background</CardTag>
+            <AboutText>
+              <p>
+                I am a <strong>full-stack developer</strong> with a deep passion for crafting
+                innovative, efficient, and beautiful digital experiences. My journey started
+                with raw curiosity — taking things apart to understand how they work — and
+                evolved into expertise across the entire stack.
+              </p>
+              <p>
+                I believe great software is like great architecture: <strong>structurally sound</strong>,
+                aesthetically considered, and built to stand the test of time. Every line of
+                code I write is crafted with performance, accessibility, and user delight in mind.
+              </p>
+              <p>
+                My mission is to bridge the gap between <strong>imagination and reality</strong> —
+                creating digital experiences that function flawlessly and leave users genuinely impressed.
+              </p>
+            </AboutText>
+          </BiographyCard>
 
-          <SkillsContainer
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            <SkillsTitle>Core Technologies</SkillsTitle>
+          {/* Skills */}
+          <SkillsCard variants={cardVariants} onMouseMove={spotlight}>
+            <CardTag>Stack</CardTag>
+            <CardTitle>Core Technologies</CardTitle>
             <SkillsGrid>
-              {skills.map((skill, index) => (
-                <SkillItem
-                  key={skill}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.03 }}
-                >
-                  {skill}
-                </SkillItem>
+              {skillDomains.map(domain => (
+                <DomainGroup key={domain.name}>
+                  <DomainLabel $color={domain.color}>{domain.name}</DomainLabel>
+                  <PillRow>
+                    {domain.skills.map((skill, i) => (
+                      <Pill
+                        key={skill}
+                        $color={domain.color}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.04, duration: 0.3 }}
+                        whileHover={{ scale: 1.06 }}
+                      >
+                        {skill}
+                      </Pill>
+                    ))}
+                  </PillRow>
+                </DomainGroup>
               ))}
             </SkillsGrid>
-          </SkillsContainer>
-        </AboutGrid>
+          </SkillsCard>
 
-        <StatsContainer>
-          {stats.map((stat, index) => (
-            <StatItem
-              key={stat.label}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <StatNumber>{stat.number}</StatNumber>
-              <StatLabel>{stat.label}</StatLabel>
-            </StatItem>
-          ))}
-        </StatsContainer>
-      </AboutContent>
-    </AboutContainer>
+          {/* Stat 1 */}
+          <Stat1Card variants={cardVariants} onMouseMove={spotlight}>
+            <CardTag>Projects</CardTag>
+            <BigNumber><CounterVal value="20+" /></BigNumber>
+            <StatDesc>Quality Projects Shipped</StatDesc>
+          </Stat1Card>
+
+          {/* Stat 2 */}
+          <Stat2Card variants={cardVariants} onMouseMove={spotlight}>
+            <CardTag>Experience</CardTag>
+            <BigNumber><CounterVal value="2+" /></BigNumber>
+            <StatDesc>Years of Building</StatDesc>
+          </Stat2Card>
+
+          {/* Approach */}
+          <ApproachCard variants={cardVariants} onMouseMove={spotlight}>
+            <CardTag>Approach</CardTag>
+            <AboutText>
+              <p style={{ marginBottom: 0 }}>
+                I approach every project as a <strong>product thinker</strong> — starting with
+                the user problem, designing the system, then writing the code. I care deeply
+                about the tiny details that separate good from <strong>exceptional</strong>.
+              </p>
+            </AboutText>
+          </ApproachCard>
+
+          {/* Learning ticker */}
+          <TickerCard variants={cardVariants} style={{ overflow: 'hidden' }}>
+            <TickerLabel>Exploring</TickerLabel>
+            <div style={{ overflow: 'hidden', flex: 1 }}>
+              <TickerTrack>
+                {LEARNING.map((item, i) => (
+                  <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '2.5rem' }}>
+                    <TickerItem>{item}</TickerItem>
+                    <span style={{ color: '#E8D5A3', fontSize: '0.45rem', verticalAlign: 'middle' }}>&#9632;</span>
+                  </span>
+                ))}
+              </TickerTrack>
+            </div>
+          </TickerCard>
+        </BentoGrid>
+      </AboutContainer>
+    </AboutSection>
   )
 }
 

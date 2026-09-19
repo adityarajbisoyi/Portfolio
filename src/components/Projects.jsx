@@ -1,14 +1,13 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 import styled from 'styled-components'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-// Load image paths statically with Vite
+/* ---- Image loader ---- */
 const imageModules = import.meta.glob('../assets/projects/*/*.{png,jpg,jpeg,svg,webp}', { eager: true })
 
 const getProjectImages = (folderName) => {
   const images = []
   for (const path in imageModules) {
-    // Looks for images in src/assets/projects/{folderName}/
     if (path.includes(`../assets/projects/${folderName}/`)) {
       images.push(imageModules[path].default)
     }
@@ -16,394 +15,493 @@ const getProjectImages = (folderName) => {
   return images
 }
 
-const ProjectsContainer = styled.section`
-  padding: 6rem 2rem;
-  background: ${props => props.theme.colors.darkAlt};
+/* ---- Styles ---- */
+const ProjectsSection = styled.section`
+  padding: 8.5rem 2rem 6rem;
+  background: #0A0A0A;
   position: relative;
+  overflow: hidden;
+  scroll-margin-top: 80px;
+
+  @media (max-width: 900px) { padding: 6.5rem 1.5rem 5rem; }
+  @media (max-width: 600px) { padding: 5rem 1.25rem 4rem; }
 `
 
-const ProjectsContent = styled.div`
-  max-width: 1200px;
+const ProjectsContainer = styled.div`
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
   z-index: 2;
 `
 
+
+const SectionTag = styled(motion.div)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #E8D5A3;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: #E8D5A3;
+  }
+`
+
 const SectionTitle = styled(motion.h2)`
-  font-size: 2.5rem;
-  font-weight: 800;
-  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
   margin-bottom: 3rem;
-  color: ${props => props.theme.colors.white};
-  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 2;
 
-  @media (max-width: 768px) {
-    font-size: 2rem;
+  span { color: #E8D5A3; }
+`
+
+/* ---- Filters ---- */
+const FilterSection = styled.div`
+  position: relative;
+  z-index: 2;
+  margin-bottom: 3rem;
+`
+
+const FilterGroupLabel = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #E8D5A3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #E8D5A3;
+    box-shadow: 0 0 8px rgba(232, 213, 163, 0.7);
   }
 `
 
-const ProjectsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
+const ScrollablePillRow = styled(motion.div)`
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  overflow-x: auto;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.85rem;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 92%, transparent 100%);
+
+  @media (min-width: 601px) {
+    flex-wrap: wrap;
+    -webkit-mask-image: none;
+    mask-image: none;
+    overflow-x: visible;
+    padding-bottom: 0;
   }
 `
 
-const ProjectCard = styled(motion.div)`
-  background: ${props => props.theme.colors.cardBg};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
+const PillTab = styled(motion.button)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem 1.15rem;
+  border-radius: 100px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid ${props => props.$active ? '#E8D5A3' : 'rgba(255,255,255,0.18)'};
+  background: ${props => props.$active ? 'rgba(232, 213, 163, 0.22)' : 'rgba(255,255,255,0.04)'};
+  color: ${props => props.$active ? '#FFFFFF' : '#D6D6D6'};
+  box-shadow: ${props => props.$active ? '0 0 16px rgba(232, 213, 163, 0.25)' : 'none'};
+  letter-spacing: 0.4px;
+  transition: all 0.22s ease;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(232, 213, 163, 0.6);
+    color: #FFFFFF;
+    background: rgba(232, 213, 163, 0.12);
   }
 `
 
-const ProjectCarouselContainer = styled.div`
-  height: 220px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg,
-    rgba(91, 164, 230, 0.08) 0%,
-    rgba(91, 164, 230, 0.15) 100%
-  );
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+const PillCount = styled.span`
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 50px;
+  background: ${props => props.$active ? 'rgba(232, 213, 163, 0.35)' : 'rgba(255, 255, 255, 0.12)'};
+  color: ${props => props.$active ? '#FFFFFF' : '#E8D5A3'};
 `
 
-const CarouselImage = styled(motion.img)`
+const FilterDivider = styled.div`
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 0.75rem 0;
+`
+
+const ResultCount = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: rgba(232, 213, 163, 0.15);
+  margin-left: auto;
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(232, 213, 163, 0.4);
+  border-radius: 100px;
+  flex-shrink: 0;
+`
+
+/* ---- Project Grid ---- */
+const ProjectsGrid = styled(motion.div)`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr));
+  gap: 1.75rem;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+`
+
+/* ---- Spotlight Card ---- */
+const Card = styled(motion.div)`
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  cursor: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.35s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      400px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(232, 213, 163, 0.08) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &:hover {
+    border-color: rgba(232, 213, 163, 0.35);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.55);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  /* Category top border */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: ${props => props.$accentColor || '#E8D5A3'};
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+`
+
+const ImageArea = styled.div`
+  height: 210px;
+  position: relative;
+  overflow: hidden;
+  background: #0D0D0D;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+`
+
+const CarouselImg = styled(motion.img)`
   width: 100%;
   height: 100%;
   object-fit: contain;
   position: absolute;
-  top: 0;
-  left: 0;
-`
+  inset: 0;
+  transition: transform 0.4s ease;
 
-const CarouselButton = styled.button`
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(10, 15, 25, 0.7);
-  color: ${props => props.theme.colors.primary};
-  border: 1px solid ${props => props.theme.colors.primary};
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(4px);
-
-  &:hover {
-    background: ${props => props.theme.colors.primary};
-    color: ${props => props.theme.colors.dark};
-    box-shadow: 0 0 15px ${props => props.theme.colors.primary};
-  }
-
-  &.prev { left: 10px; }
-  &.next { right: 10px; }
-
-  & svg {
-    width: 16px;
-    height: 16px;
-    fill: currentColor;
+  ${Card}:hover & {
+    transform: scale(1.04);
   }
 `
 
-const EmptyImagePlaceholder = styled.div`
+const EmptyImg = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${props => props.theme.colors.primary};
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-shadow: 0 0 5px rgba(91, 164, 230, 0.5);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #333;
 `
 
-const ProjectContent = styled.div`
-  padding: 1.5rem;
-`
-
-const ProjectHeader = styled.div`
+const CarouselDots = styled.div`
+  position: absolute;
+  bottom: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: space-between;
+  gap: 0.35rem;
+  z-index: 3;
+`
+
+const CarouselDot = styled.div`
+  width: ${props => props.$active ? '16px' : '5px'};
+  height: 5px;
+  border-radius: 3px;
+  background: ${props => props.$active ? '#E8D5A3' : 'rgba(255,255,255,0.2)'};
+  transition: all 0.3s ease;
+`
+
+const CarouselArrow = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  ${props => props.$dir === 'left' ? 'left: 0.5rem;' : 'right: 0.5rem;'}
+  background: rgba(10,10,10,0.8);
+  border: 1px solid rgba(232, 213, 163, 0.2);
+  color: #E8D5A3;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  ${ImageArea}:hover & {
+    opacity: 1;
+  }
+
+  svg { width: 14px; height: 14px; }
+`
+
+/* Content area */
+const CardBody = styled.div`
+  padding: 1.5rem;
+  position: relative;
+  z-index: 2;
+`
+
+const CardTop = styled.div`
+  display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 `
 
-const ProjectTitle = styled.h3`
-  font-size: 1.25rem;
-  color: ${props => props.theme.colors.white};
-  margin-bottom: 0;
-  font-weight: 600;
+const CardTitle = styled.h3`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.3;
 `
 
-const SoftwareBadge = styled.span`
-  font-size: 0.725rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
+const TypeBadge = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.25rem 0.7rem;
+  border-radius: 100px;
   white-space: nowrap;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   flex-shrink: 0;
 
   ${props => {
-    switch (props.$type) {
-      case 'PWA':
-        return `
-          background: rgba(16, 185, 129, 0.12);
-          color: #34d399;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
-        `;
-      case 'Desktop App':
-        return `
-          background: rgba(139, 92, 246, 0.12);
-          color: #c084fc;
-          border: 1px solid rgba(139, 92, 246, 0.3);
-          box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
-        `;
-      case 'Mobile App':
-        return `
-          background: rgba(245, 158, 11, 0.12);
-          color: #fbbf24;
-          border: 1px solid rgba(245, 158, 11, 0.3);
-          box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
-        `;
-      default: // Web App
-        return `
-          background: rgba(91, 164, 230, 0.12);
-          color: #5ba4e6;
-          border: 1px solid rgba(91, 164, 230, 0.3);
-          box-shadow: 0 0 10px rgba(91, 164, 230, 0.1);
-        `;
+    const colors = {
+      'PWA': ['#34d399', 'rgba(16, 185, 129, 0.18)', 'rgba(16, 185, 129, 0.4)'],
+      'Desktop App': ['#c084fc', 'rgba(139, 92, 246, 0.18)', 'rgba(139, 92, 246, 0.4)'],
+      'Mobile App': ['#fbbf24', 'rgba(245, 158, 11, 0.18)', 'rgba(245, 158, 11, 0.4)'],
+      'Web App': ['#00E5CC', 'rgba(0, 229, 204, 0.16)', 'rgba(0, 229, 204, 0.38)'],
     }
+    const [color, bg, border] = colors[props.$type] || colors['Web App']
+    return `color: ${color}; background: ${bg}; border: 1px solid ${border}; font-weight: 700;`
   }}
 `
 
-const ProjectDescription = styled.p`
-  color: ${props => props.theme.colors.grey};
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
+const CardDesc = styled.p`
   font-size: 0.95rem;
+  line-height: 1.72;
+  color: #D6D6D6;
+  margin-bottom: 1.35rem;
 `
 
-const TechStack = styled.div`
+const TechRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: 0.45rem;
+  margin-bottom: 1.35rem;
 `
 
-const TechTag = styled.span`
-  background: rgba(91, 164, 230, 0.08);
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 4px;
-  padding: 0.25rem 0.625rem;
-  font-size: 0.8rem;
-  color: ${props => props.theme.colors.primary};
-  font-weight: 500;
-`
-
-const ProjectStats = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  font-size: 0.8rem;
-  color: ${props => props.theme.colors.grey};
-`
-
-const ProjectStat = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-`
-
-
-const ProjectLinks = styled.div`
-  display: flex;
-  gap: 0.75rem;
-`
-
-const ProjectLink = styled(motion.a)`
-  background: ${props => props.theme.colors.primary};
-  color: ${props => props.theme.colors.dark};
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+const TechChip = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.78rem;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: background 0.2s ease;
-
-  &:hover {
-    background: ${props => props.theme.colors.primaryLight};
-  }
-`
-
-const FilterContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
-`
-
-const FilterButtons = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-`
-
-const FilterButton = styled(motion.button)`
-  background: ${props => props.$active ?
-    props.theme.colors.primary :
-    'rgba(91, 164, 230, 0.08)'
-  };
-  border: 1px solid ${props => props.$active ?
-    props.theme.colors.primary :
-    props.theme.colors.border
-  };
+  padding: 0.28rem 0.75rem;
   border-radius: 6px;
-  padding: 0.625rem 1.25rem;
-  color: ${props => props.$active ? props.theme.colors.dark : props.theme.colors.grey};
-  font-weight: 500;
-  font-size: 0.9rem;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #EEEEEE;
+  letter-spacing: 0.3px;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
-    color: ${props => props.$active ? props.theme.colors.dark : props.theme.colors.white};
+    background: rgba(232, 213, 163, 0.18);
+    border-color: #E8D5A3;
+    color: #FFFFFF;
   }
 `
 
-const DropdownContainer = styled.div`
-  display: flex;
+const ExperienceLink = styled(motion.a)`
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  background: ${props => props.theme.colors.cardBg};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-
-  &:hover, &:focus-within {
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 15px rgba(91, 164, 230, 0.2);
-  }
-`
-
-const DropdownLabel = styled.label`
-  color: ${props => props.theme.colors.grey};
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  white-space: nowrap;
-`
-
-const Select = styled.select`
-  background: transparent;
-  color: ${props => props.theme.colors.white};
-  border: none;
-  font-size: 0.875rem;
+  gap: 0.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
   font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  font-family: inherit;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #0A0A0A;
+  background: #E8D5A3;
+  text-decoration: none;
+  padding: 0.55rem 1.25rem;
+  border-radius: 100px;
+  transition: background 0.2s ease;
 
-  option {
-    background: ${props => props.theme.colors.darkAlt};
-    color: ${props => props.theme.colors.white};
-    padding: 0.5rem;
+  svg {
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    background: #F0E0B0;
+    svg { transform: translateX(3px); }
   }
 `
 
-const EmptyFilterResult = styled.div`
+const EmptyState = styled(motion.div)`
+  grid-column: 1 / -1;
   text-align: center;
-  padding: 4rem 2rem;
-  color: ${props => props.theme.colors.grey};
-  font-size: 1rem;
-  background: ${props => props.theme.colors.cardBg};
-  border: 1px dashed ${props => props.theme.colors.border};
-  border-radius: 12px;
-  width: 100%;
+  padding: 5rem 2rem;
+  color: #333;
+  font-size: 0.9rem;
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 20px;
 `
 
+/* ---- Category accent colors ---- */
+const categoryColors = {
+  'Creativity': '#FF6B35',
+  'Games': '#c084fc',
+  'Productivity Tools': '#00E5CC',
+  'Simulation': '#E8D5A3',
+  'Developer Utilities': '#4ade80',
+}
+
+/* ---- Carousel sub-component ---- */
 const ProjectCarousel = ({ folderName }) => {
-  const images = getProjectImages(folderName);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const images = getProjectImages(folderName)
+  const [idx, setIdx] = useState(0)
 
   useEffect(() => {
-    if (images && images.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentIndex(prev => (prev + 1) % images.length);
-      }, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [images]);
+    if (images.length <= 1) return
+    const t = setInterval(() => setIdx(p => (p + 1) % images.length), 2500)
+    return () => clearInterval(t)
+  }, [images.length])
 
-  if (!images || images.length === 0) {
-    return (
-      <ProjectCarouselContainer>
-        <EmptyImagePlaceholder>Awaiting Visuals - {folderName}</EmptyImagePlaceholder>
-      </ProjectCarouselContainer>
-    );
-  }
-
-  const nextSlide = () => setCurrentIndex(prev => (prev + 1) % images.length);
-  const prevSlide = () => setCurrentIndex(prev => (prev - 1 + images.length) % images.length);
+  if (!images.length) return <EmptyImg>No preview</EmptyImg>
 
   return (
-    <ProjectCarouselContainer>
+    <>
       <AnimatePresence mode="wait">
-        <CarouselImage
-          key={currentIndex}
-          src={images[currentIndex]}
+        <CarouselImg
+          key={idx}
+          src={images[idx]}
+          alt=""
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.35 }}
         />
       </AnimatePresence>
       {images.length > 1 && (
         <>
-          <CarouselButton className="prev" onClick={prevSlide}>
-            <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" /></svg>
-          </CarouselButton>
-          <CarouselButton className="next" onClick={nextSlide}>
-            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" /></svg>
-          </CarouselButton>
+          <CarouselArrow $dir="left" onClick={e => { e.stopPropagation(); setIdx(p => (p - 1 + images.length) % images.length) }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          </CarouselArrow>
+          <CarouselArrow $dir="right" onClick={e => { e.stopPropagation(); setIdx(p => (p + 1) % images.length) }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </CarouselArrow>
+          <CarouselDots>
+            {images.map((_, i) => <CarouselDot key={i} $active={i === idx} />)}
+          </CarouselDots>
         </>
       )}
-    </ProjectCarouselContainer>
-  );
-};
+    </>
+  )
+}
 
+/* ---- Data ---- */
 const PROJECTS_DATA = [
   {
     id: 1,
     title: 'Step Tracker',
     folderName: 'StepTracker',
-    description: 'A multi-user step tracker with dashboards, leaderboard, competetive charts , Team support. Everything you need to achieve your target steps and covert your casual walk into a disciplined hobby.',
+    description: 'A multi-user step tracker with dashboards, leaderboard, competitive charts, and team support — turning your casual walk into a disciplined habit.',
     tech: ['Svelte', 'Hono', 'Cloudflare', 'Javascript', 'Tailwind'],
     category: 'Productivity Tools',
     softwareType: 'PWA',
@@ -413,7 +511,7 @@ const PROJECTS_DATA = [
     id: 2,
     title: 'Habibo',
     folderName: 'Habibo',
-    description: 'A minimalist hobby tracker with detailed Insights and amazing Visual analytics',
+    description: 'A minimalist hobby tracker with detailed insights and stunning visual analytics — built for people who take their growth seriously.',
     tech: ['React', 'Hono', 'Cloudflare', 'Typescript', 'Tailwind'],
     category: 'Productivity Tools',
     softwareType: 'PWA',
@@ -421,9 +519,9 @@ const PROJECTS_DATA = [
   },
   {
     id: 3,
-    title: 'Easiest Git and Github Visualizer',
+    title: 'Easiest Git & Github Visualizer',
     folderName: 'GitVisualizer',
-    description: 'An amazing and interactive visual interface to learn all the usefull concepts of Git & Github through meaningful simulation without doing any setup.',
+    description: 'An interactive visual interface to learn all essential Git & Github concepts through meaningful simulation — zero setup required.',
     tech: ['React', 'Cloudflare', 'Framer', 'Tailwind'],
     category: 'Simulation',
     softwareType: 'Web App',
@@ -433,7 +531,7 @@ const PROJECTS_DATA = [
     id: 4,
     title: 'Database Migrator',
     folderName: 'dbmig',
-    description: 'A time saving tool where developers can migrate there PostgreSQL databases across different platforms, Export and Import data through excel, and preview data in minutes.',
+    description: 'A time-saving tool to migrate PostgreSQL databases across platforms, export/import via Excel, and preview data in minutes.',
     tech: ['Flask', 'Python', 'React', 'PostgreSQL'],
     category: 'Developer Utilities',
     softwareType: 'Web App',
@@ -443,7 +541,7 @@ const PROJECTS_DATA = [
     id: 5,
     title: 'AI Form Builder',
     folderName: 'AIFormBuilder',
-    description: 'Extremely usefull and quick tool when somewant to create survey form and manage them just by typing what they need',
+    description: 'Create survey forms and manage them by just typing what you need — powered by AI for instant generation and management.',
     tech: ['Groq', 'Python', 'React', 'D1SQLite'],
     category: 'Productivity Tools',
     softwareType: 'Web App',
@@ -453,7 +551,7 @@ const PROJECTS_DATA = [
     id: 6,
     title: 'TickKick',
     folderName: 'TickKick',
-    description: 'Premium Looking todo tracker with minimalist design and all essentials',
+    description: 'A premium-looking todo tracker with a minimalist design and all the essentials you need to stay organized.',
     tech: ['React'],
     category: 'Productivity Tools',
     softwareType: 'Web App',
@@ -463,123 +561,240 @@ const PROJECTS_DATA = [
     id: 7,
     title: 'Neon Video Editor',
     folderName: 'NeonEditor',
-    description: 'Ultramodern and Efficient video editor for content Creators, Gamers, and Educators.',
-    tech: ['Electron', 'FFmpeg', 'React', 'Zustand', 'Inter Process Communication', 'Tailwind'],
+    description: 'An ultramodern and efficient video editor for content creators, gamers, and educators. Desktop-grade performance.',
+    tech: ['Electron', 'FFmpeg', 'React', 'Zustand', 'IPC', 'Tailwind'],
     category: 'Creativity',
     softwareType: 'Desktop App',
     deployedUrl: 'https://github.com/adityarajbisoyi/Video-Editor/releases/download/v1.0.0/Neon.Video.Editor-0.1.0-setup.exe'
   },
-
 ]
 
+/* ---- Main Component ---- */
 const Projects = () => {
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [activeSoftwareType, setActiveSoftwareType] = useState('All')
+  const [activeCat, setActiveCat] = useState('All')
+  const [activeType, setActiveType] = useState('All')
 
-  const categories = ['All', 'Creativity', 'Games', 'Productivity Tools', 'Simulation', 'Developer Utilities']
-  const softwareTypeTag = ['All', 'Web App', 'PWA', 'Desktop App', 'Mobile App']
+  // Only show categories that have projects matching activeType (or all categories if activeType === 'All')
+  const availableCategories = (() => {
+    const pool = activeType === 'All'
+      ? PROJECTS_DATA
+      : PROJECTS_DATA.filter(p => p.softwareType === activeType)
+    return ['All', ...Array.from(new Set(pool.map(p => p.category)))]
+  })()
 
-  const filteredProjects = PROJECTS_DATA.filter(project => {
-    const matchesCategory = activeCategory === 'All' || project.category === activeCategory
-    const matchesSoftware = activeSoftwareType === 'All' || project.softwareType === activeSoftwareType
-    return matchesCategory && matchesSoftware
+  // Only show platform types that exist within the current category selection
+  const availablePlatforms = (() => {
+    const pool = activeCat === 'All'
+      ? PROJECTS_DATA
+      : PROJECTS_DATA.filter(p => p.category === activeCat)
+    return ['All', ...Array.from(new Set(pool.map(p => p.softwareType)))]
+  })()
+
+  // Dynamic counts for each pill
+  const getCatCount = (cat) => {
+    if (cat === 'All') {
+      return activeType === 'All'
+        ? PROJECTS_DATA.length
+        : PROJECTS_DATA.filter(p => p.softwareType === activeType).length
+    }
+    return (activeType === 'All'
+      ? PROJECTS_DATA.filter(p => p.category === cat)
+      : PROJECTS_DATA.filter(p => p.category === cat && p.softwareType === activeType)
+    ).length
+  }
+
+  const getTypeCount = (type) => {
+    if (type === 'All') {
+      return activeCat === 'All'
+        ? PROJECTS_DATA.length
+        : PROJECTS_DATA.filter(p => p.category === activeCat).length
+    }
+    return (activeCat === 'All'
+      ? PROJECTS_DATA.filter(p => p.softwareType === type)
+      : PROJECTS_DATA.filter(p => p.category === activeCat && p.softwareType === type)
+    ).length
+  }
+
+  // Handle category change: ensure activeType still exists in the new category
+  const handleCatChange = (cat) => {
+    setActiveCat(cat)
+    if (activeType !== 'All') {
+      const pool = cat === 'All' ? PROJECTS_DATA : PROJECTS_DATA.filter(p => p.category === cat)
+      const validTypes = pool.map(p => p.softwareType)
+      if (!validTypes.includes(activeType)) {
+        setActiveType('All')
+      }
+    }
+  }
+
+  // Handle platform change: ensure activeCat still exists for this new type
+  const handleTypeChange = (type) => {
+    setActiveType(type)
+    if (activeCat !== 'All') {
+      const pool = type === 'All' ? PROJECTS_DATA : PROJECTS_DATA.filter(p => p.softwareType === type)
+      const validCats = pool.map(p => p.category)
+      if (!validCats.includes(activeCat)) {
+        setActiveCat('All')
+      }
+    }
+  }
+
+  const filtered = PROJECTS_DATA.filter(p => {
+    const catOk = activeCat === 'All' || p.category === activeCat
+    const typeOk = activeType === 'All' || p.softwareType === activeType
+    return catOk && typeOk
   })
 
+  // Spotlight effect per card
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget
+    const rect = card.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    card.style.setProperty('--mx', `${x}%`)
+    card.style.setProperty('--my', `${y}%`)
+  }
+
+  const containerVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.07 } }
+  }
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 35 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
+  }
+
   return (
-    <ProjectsContainer id="projects">
-      <ProjectsContent>
+    <ProjectsSection id="projects">
+      <ProjectsContainer>
+        <SectionTag
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          Selected Projects
+        </SectionTag>
+
         <SectionTitle
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
         >
-          Projects
+          Things I have <span>built</span>
         </SectionTitle>
 
-        <FilterContainer>
-          <FilterButtons>
-            {categories.map((category) => (
-              <FilterButton
-                key={category}
-                $active={activeCategory === category}
-                onClick={() => setActiveCategory(category)}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {category}
-              </FilterButton>
-            ))}
-          </FilterButtons>
-
-          <DropdownContainer>
-            <DropdownLabel htmlFor="software-type-filter">
-              Platform / Type:
-            </DropdownLabel>
-            <Select
-              id="software-type-filter"
-              value={activeSoftwareType}
-              onChange={(e) => setActiveSoftwareType(e.target.value)}
-            >
-              {softwareTypeTag.map((type) => (
-                <option key={type} value={type}>
-                  {type === 'All' ? 'All Platform Types' : type}
-                </option>
+        {/* Filters */}
+        <FilterSection>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <FilterGroupLabel>Category</FilterGroupLabel>
+            <ScrollablePillRow>
+              {availableCategories.map(c => (
+                <PillTab
+                  key={c}
+                  $active={activeCat === c}
+                  onClick={() => handleCatChange(c)}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  {c}
+                  <PillCount $active={activeCat === c}>{getCatCount(c)}</PillCount>
+                </PillTab>
               ))}
-            </Select>
-          </DropdownContainer>
-        </FilterContainer>
+              <ResultCount>{filtered.length} {filtered.length === 1 ? 'project' : 'projects'}</ResultCount>
+            </ScrollablePillRow>
 
-        {filteredProjects.length === 0 ? (
-          <EmptyFilterResult>
-            No projects found matching the selected filters.
-          </EmptyFilterResult>
-        ) : (
-          <ProjectsGrid>
-            {filteredProjects.map((project, index) => (
-              <ProjectCard
-                key={project.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                viewport={{ once: true }}
-              >
-                <ProjectCarousel folderName={project.folderName} />
+            <FilterDivider />
 
-                <ProjectContent>
-                  <ProjectHeader>
-                    <ProjectTitle>{project.title}</ProjectTitle>
-                    <SoftwareBadge $type={project.softwareType}>
-                      {project.softwareType}
-                    </SoftwareBadge>
-                  </ProjectHeader>
+            <FilterGroupLabel style={{ marginTop: '0.75rem' }}>Platform</FilterGroupLabel>
+            <ScrollablePillRow>
+              {availablePlatforms.map(t => (
+                <PillTab
+                  key={t}
+                  $active={activeType === t}
+                  onClick={() => handleTypeChange(t)}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  {t}
+                  <PillCount $active={activeType === t}>{getTypeCount(t)}</PillCount>
+                </PillTab>
+              ))}
+            </ScrollablePillRow>
+          </motion.div>
+        </FilterSection>
 
-                  <ProjectDescription>{project.description}</ProjectDescription>
 
-                  <TechStack>
-                    {project.tech.map((tech) => (
-                      <TechTag key={tech}>{tech}</TechTag>
-                    ))}
-                  </TechStack>
+        <AnimatePresence mode="wait">
+          {filtered.length === 0 ? (
+            <EmptyState
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              No projects match the selected filters.
+            </EmptyState>
+          ) : (
+            <ProjectsGrid
+              key="grid"
+              as={motion.div}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {filtered.map(project => (
+                <Card
+                  key={project.id}
+                  variants={cardVariants}
+                  $accentColor={categoryColors[project.category] || '#E8D5A3'}
+                  onMouseMove={handleMouseMove}
+                  whileHover={{ y: -6 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ImageArea>
+                    <ProjectCarousel folderName={project.folderName} />
+                  </ImageArea>
 
-                  <ProjectLinks>
-                    <ProjectLink
-                      href={project.deployedUrl || "#"}
+                  <CardBody>
+                    <CardTop>
+                      <CardTitle>{project.title}</CardTitle>
+                      <TypeBadge $type={project.softwareType}>{project.softwareType}</TypeBadge>
+                    </CardTop>
+
+                    <CardDesc>{project.description}</CardDesc>
+
+                    <TechRow>
+                      {project.tech.map(t => <TechChip key={t}>{t}</TechChip>)}
+                    </TechRow>
+
+                    <ExperienceLink
+                      href={project.deployedUrl || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                     >
                       Experience
-                    </ProjectLink>
-                  </ProjectLinks>
-                </ProjectContent>
-              </ProjectCard>
-            ))}
-          </ProjectsGrid>
-        )}
-      </ProjectsContent>
-    </ProjectsContainer>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </ExperienceLink>
+                  </CardBody>
+                </Card>
+              ))}
+            </ProjectsGrid>
+          )}
+        </AnimatePresence>
+      </ProjectsContainer>
+    </ProjectsSection>
   )
 }
 
