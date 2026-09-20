@@ -65,41 +65,66 @@ const NavRight = styled.div`
 const DesktopNav = styled.nav`
   display: flex;
   align-items: center;
-  gap: 2.25rem;
+  gap: 0.35rem;
+  background: rgba(18, 18, 18, 0.7);
+  border: 1px solid rgba(232, 213, 163, 0.16);
+  padding: 0.3rem 0.35rem;
+  border-radius: 100px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-  @media (max-width: 820px) {
+  @media (max-width: 860px) {
     display: none;
   }
+`
+
+const NavItemWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
 `
 
 const NavLink = styled.button`
   background: none;
   border: none;
+  outline: none;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  color: ${props => props.$active ? '#E8D5A3' : '#D4D4D4'};
+  letter-spacing: 0.4px;
+  color: ${props => props.$active ? '#FFFFFF' : '#A3A3A3'};
   cursor: pointer;
-  padding: 0.4rem 0;
+  padding: 0.45rem 1.15rem;
+  border-radius: 100px;
   position: relative;
-  transition: color 0.2s ease;
+  z-index: 2;
+  transition: color 0.25s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: ${props => props.$active ? '100%' : '0%'};
-    height: 2px;
-    background: #E8D5A3;
-    transition: width 0.25s ease;
+  &:focus,
+  &:focus-visible,
+  &:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   &:hover {
     color: #FFFFFF;
-    &::after { width: 100%; }
   }
+`
+
+const ActivePill = styled(motion.div)`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(232, 213, 163, 0.22) 0%, rgba(196, 169, 107, 0.14) 100%);
+  border: 1px solid rgba(232, 213, 163, 0.4);
+  border-radius: 100px;
+  box-shadow: 0 0 16px rgba(232, 213, 163, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  z-index: 1;
+  pointer-events: none;
 `
 
 const HamburgerBtn = styled.button`
@@ -281,6 +306,7 @@ const sections = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
   { id: 'projects', label: 'Projects' },
+  { id: 'certifications', label: 'Certifications' },
   { id: 'contact', label: 'Contact' },
 ]
 
@@ -371,15 +397,29 @@ const Navigation = () => {
           </Logo>
 
           <DesktopNav>
-            {sections.map(s => (
-              <NavLink
-                key={s.id}
-                $active={activeSection === s.id}
-                onClick={() => scrollTo(s.id)}
-              >
-                {s.label}
-              </NavLink>
-            ))}
+            {sections.map(s => {
+              const isActive = activeSection === s.id
+              return (
+                <NavItemWrapper key={s.id}>
+                  <NavLink
+                    $active={isActive}
+                    onClick={() => scrollTo(s.id)}
+                  >
+                    {s.label}
+                  </NavLink>
+                  {isActive && (
+                    <ActivePill
+                      layoutId="activeNavIndicator"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 420,
+                        damping: 32
+                      }}
+                    />
+                  )}
+                </NavItemWrapper>
+              )
+            })}
           </DesktopNav>
 
           <NavRight>

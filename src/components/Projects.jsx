@@ -1,6 +1,6 @@
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
-import styled from 'styled-components'
-import { useState, useEffect, useRef } from 'react'
+import styled, { keyframes } from 'styled-components'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 /* ---- Image loader ---- */
 const imageModules = import.meta.glob('../assets/projects/*/*.{png,jpg,jpeg,svg,webp}', { eager: true })
@@ -221,28 +221,20 @@ const Card = styled(motion.div)`
   &:hover {
     border-color: rgba(232, 213, 163, 0.35);
     box-shadow: 0 16px 45px rgba(0, 0, 0, 0.55);
-
-    &::before {
-      opacity: 1;
-    }
+    &::before { opacity: 1; }
   }
 
-  /* Category top border */
   &::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 2px;
     background: ${props => props.$accentColor || '#E8D5A3'};
     opacity: 0;
     transition: opacity 0.3s ease;
   }
 
-  &:hover::after {
-    opacity: 1;
-  }
+  &:hover::after { opacity: 1; }
 `
 
 const ImageArea = styled.div`
@@ -448,6 +440,205 @@ const categoryColors = {
   'Developer Utilities': '#4ade80',
 }
 
+/* ================ SLIDESHOW SHOWCASE STYLES ================ */
+const ShowcaseWrapper = styled.div`
+  position: relative;
+  z-index: 2;
+  width: 100%;
+`
+
+const ShowcaseCard = styled(motion.div)`
+  background: #121212;
+  border: 1px solid rgba(232, 213, 163, 0.2);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const ShowcaseImageArea = styled.div`
+  height: 420px;
+  position: relative;
+  overflow: hidden;
+  background: #0D0D0D;
+
+  @media (max-width: 900px) { height: 280px; }
+  @media (max-width: 600px) { height: 220px; }
+`
+
+const ShowcaseImg = styled(motion.img)`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  inset: 0;
+`
+
+const ShowcaseImgDots = styled.div`
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.4rem;
+  z-index: 3;
+`
+
+const ShowcaseImgDot = styled.div`
+  width: ${props => props.$active ? '20px' : '6px'};
+  height: 6px;
+  border-radius: 3px;
+  background: ${props => props.$active ? '#E8D5A3' : 'rgba(255,255,255,0.25)'};
+  transition: all 0.3s ease;
+`
+
+const ShowcaseBody = styled.div`
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @media (max-width: 600px) { padding: 1.5rem; }
+`
+
+const ShowcaseCounter = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #E8D5A3;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+`
+
+const ShowcaseTitle = styled.h3`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 600px) { font-size: 1.4rem; }
+`
+
+const ShowcaseBadge = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.7rem;
+  border-radius: 100px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-self: flex-start;
+  margin-bottom: 1rem;
+
+  ${props => {
+    const colors = {
+      'PWA': ['#34d399', 'rgba(16, 185, 129, 0.18)', 'rgba(16, 185, 129, 0.4)'],
+      'Desktop App': ['#c084fc', 'rgba(139, 92, 246, 0.18)', 'rgba(139, 92, 246, 0.4)'],
+      'Mobile App': ['#fbbf24', 'rgba(245, 158, 11, 0.18)', 'rgba(245, 158, 11, 0.4)'],
+      'Web App': ['#00E5CC', 'rgba(0, 229, 204, 0.16)', 'rgba(0, 229, 204, 0.38)'],
+    }
+    const [color, bg, border] = colors[props.$type] || colors['Web App']
+    return `color: ${color}; background: ${bg}; border: 1px solid ${border};`
+  }}
+`
+
+const ShowcaseDesc = styled.p`
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #C8C8C8;
+  margin-bottom: 1.5rem;
+`
+
+const ShowcaseTechRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.5rem;
+`
+
+const ShowcaseNavRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+`
+
+const ShowcaseNavBtn = styled.button`
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 213, 163, 0.3);
+  background: rgba(232, 213, 163, 0.06);
+  color: #E8D5A3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #E8D5A3;
+    color: #0A0A0A;
+  }
+
+  svg { width: 16px; height: 16px; }
+`
+
+const ShowcaseProjectDots = styled.div`
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+`
+
+const ShowcaseProjectDot = styled.button`
+  width: ${props => props.$active ? '24px' : '8px'};
+  height: 8px;
+  border-radius: 4px;
+  background: ${props => props.$active ? '#E8D5A3' : 'rgba(255,255,255,0.15)'};
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover { background: rgba(232, 213, 163, 0.5); }
+`
+
+/* Toggle Button */
+const ToggleViewBtn = styled(motion.button)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 2.5rem auto 0;
+  padding: 0.85rem 2rem;
+  border-radius: 100px;
+  border: 1px solid rgba(232, 213, 163, 0.35);
+  background: rgba(232, 213, 163, 0.06);
+  color: #E8D5A3;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #E8D5A3;
+    color: #0A0A0A;
+    box-shadow: 0 6px 20px rgba(232, 213, 163, 0.3);
+  }
+
+  svg { width: 14px; height: 14px; }
+`
+
 /* ---- Carousel sub-component ---- */
 const ProjectCarousel = ({ folderName }) => {
   const images = getProjectImages(folderName)
@@ -490,6 +681,75 @@ const ProjectCarousel = ({ folderName }) => {
             {images.map((_, i) => <CarouselDot key={i} $active={i === idx} />)}
           </CarouselDots>
         </>
+      )}
+    </>
+  )
+}
+
+/* ---- Showcase Image Carousel (for slideshow mode) ---- */
+const ShowcaseImageCarousel = ({ folderName, onAllImagesDone }) => {
+  const images = getProjectImages(folderName)
+  const [imgIdx, setImgIdx] = useState(0)
+  const timerRef = useRef(null)
+  const cycleDoneRef = useRef(false)
+
+  useEffect(() => {
+    setImgIdx(0)
+    cycleDoneRef.current = false
+  }, [folderName])
+
+  useEffect(() => {
+    if (images.length <= 1) {
+      // Single image or none — wait 3s then signal done
+      timerRef.current = setTimeout(() => {
+        if (onAllImagesDone) onAllImagesDone()
+      }, 3000)
+      return () => clearTimeout(timerRef.current)
+    }
+
+    timerRef.current = setInterval(() => {
+      setImgIdx(prev => {
+        const next = prev + 1
+        if (next >= images.length) {
+          // Completed full cycle — wait 3s then signal
+          clearInterval(timerRef.current)
+          setTimeout(() => {
+            if (onAllImagesDone && !cycleDoneRef.current) {
+              cycleDoneRef.current = true
+              onAllImagesDone()
+            }
+          }, 3000)
+          return 0 // loop back to first image during wait
+        }
+        return next
+      })
+    }, 2500)
+
+    return () => {
+      clearInterval(timerRef.current)
+      clearTimeout(timerRef.current)
+    }
+  }, [images.length, folderName])
+
+  if (!images.length) return <EmptyImg>No preview</EmptyImg>
+
+  return (
+    <>
+      <AnimatePresence mode="wait">
+        <ShowcaseImg
+          key={`${folderName}-${imgIdx}`}
+          src={images[imgIdx]}
+          alt=""
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+        />
+      </AnimatePresence>
+      {images.length > 1 && (
+        <ShowcaseImgDots>
+          {images.map((_, i) => <ShowcaseImgDot key={i} $active={i === imgIdx} />)}
+        </ShowcaseImgDots>
       )}
     </>
   )
@@ -571,10 +831,20 @@ const PROJECTS_DATA = [
 
 /* ---- Main Component ---- */
 const Projects = () => {
+  const [showAll, setShowAll] = useState(false)
   const [activeCat, setActiveCat] = useState('All')
   const [activeType, setActiveType] = useState('All')
+  const [showcaseIdx, setShowcaseIdx] = useState(0)
 
-  // Only show categories that have projects matching activeType (or all categories if activeType === 'All')
+  const handleAllImagesDone = useCallback(() => {
+    setShowcaseIdx(prev => (prev + 1) % PROJECTS_DATA.length)
+  }, [])
+
+  const prevProject = () => setShowcaseIdx(p => (p - 1 + PROJECTS_DATA.length) % PROJECTS_DATA.length)
+  const nextProject = () => setShowcaseIdx(p => (p + 1) % PROJECTS_DATA.length)
+  const jumpToProject = (i) => setShowcaseIdx(i)
+
+  // Filter logic for "Explore All" grid
   const availableCategories = (() => {
     const pool = activeType === 'All'
       ? PROJECTS_DATA
@@ -582,7 +852,6 @@ const Projects = () => {
     return ['All', ...Array.from(new Set(pool.map(p => p.category)))]
   })()
 
-  // Only show platform types that exist within the current category selection
   const availablePlatforms = (() => {
     const pool = activeCat === 'All'
       ? PROJECTS_DATA
@@ -590,7 +859,6 @@ const Projects = () => {
     return ['All', ...Array.from(new Set(pool.map(p => p.softwareType)))]
   })()
 
-  // Dynamic counts for each pill
   const getCatCount = (cat) => {
     if (cat === 'All') {
       return activeType === 'All'
@@ -615,27 +883,21 @@ const Projects = () => {
     ).length
   }
 
-  // Handle category change: ensure activeType still exists in the new category
   const handleCatChange = (cat) => {
     setActiveCat(cat)
     if (activeType !== 'All') {
       const pool = cat === 'All' ? PROJECTS_DATA : PROJECTS_DATA.filter(p => p.category === cat)
       const validTypes = pool.map(p => p.softwareType)
-      if (!validTypes.includes(activeType)) {
-        setActiveType('All')
-      }
+      if (!validTypes.includes(activeType)) setActiveType('All')
     }
   }
 
-  // Handle platform change: ensure activeCat still exists for this new type
   const handleTypeChange = (type) => {
     setActiveType(type)
     if (activeCat !== 'All') {
       const pool = type === 'All' ? PROJECTS_DATA : PROJECTS_DATA.filter(p => p.softwareType === type)
       const validCats = pool.map(p => p.category)
-      if (!validCats.includes(activeCat)) {
-        setActiveCat('All')
-      }
+      if (!validCats.includes(activeCat)) setActiveCat('All')
     }
   }
 
@@ -645,7 +907,6 @@ const Projects = () => {
     return catOk && typeOk
   })
 
-  // Spotlight effect per card
   const handleMouseMove = (e) => {
     const card = e.currentTarget
     const rect = card.getBoundingClientRect()
@@ -664,6 +925,8 @@ const Projects = () => {
     hidden: { opacity: 0, y: 35 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
   }
+
+  const currentProject = PROJECTS_DATA[showcaseIdx]
 
   return (
     <ProjectsSection id="projects">
@@ -686,111 +949,223 @@ const Projects = () => {
           Things I have <span>built</span>
         </SectionTitle>
 
-        {/* Filters */}
-        <FilterSection>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <FilterGroupLabel>Category</FilterGroupLabel>
-            <ScrollablePillRow>
-              {availableCategories.map(c => (
-                <PillTab
-                  key={c}
-                  $active={activeCat === c}
-                  onClick={() => handleCatChange(c)}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                >
-                  {c}
-                  <PillCount $active={activeCat === c}>{getCatCount(c)}</PillCount>
-                </PillTab>
-              ))}
-              <ResultCount>{filtered.length} {filtered.length === 1 ? 'project' : 'projects'}</ResultCount>
-            </ScrollablePillRow>
-
-            <FilterDivider />
-
-            <FilterGroupLabel style={{ marginTop: '0.75rem' }}>Platform</FilterGroupLabel>
-            <ScrollablePillRow>
-              {availablePlatforms.map(t => (
-                <PillTab
-                  key={t}
-                  $active={activeType === t}
-                  onClick={() => handleTypeChange(t)}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                >
-                  {t}
-                  <PillCount $active={activeType === t}>{getTypeCount(t)}</PillCount>
-                </PillTab>
-              ))}
-            </ScrollablePillRow>
-          </motion.div>
-        </FilterSection>
-
-
         <AnimatePresence mode="wait">
-          {filtered.length === 0 ? (
-            <EmptyState
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+          {!showAll ? (
+            /* ═══ SLIDESHOW MODE ═══ */
+            <motion.div
+              key="slideshow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
             >
-              No projects match the selected filters.
-            </EmptyState>
+              <ShowcaseWrapper>
+                <AnimatePresence mode="wait">
+                  <ShowcaseCard
+                    key={currentProject.id}
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -40 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <ShowcaseImageArea>
+                      <ShowcaseImageCarousel
+                        folderName={currentProject.folderName}
+                        onAllImagesDone={handleAllImagesDone}
+                      />
+                    </ShowcaseImageArea>
+
+                    <ShowcaseBody>
+                      <ShowcaseCounter>
+                        Project {showcaseIdx + 1} of {PROJECTS_DATA.length}
+                      </ShowcaseCounter>
+
+                      <ShowcaseTitle>{currentProject.title}</ShowcaseTitle>
+                      <ShowcaseBadge $type={currentProject.softwareType}>
+                        {currentProject.softwareType}
+                      </ShowcaseBadge>
+                      <ShowcaseDesc>{currentProject.description}</ShowcaseDesc>
+
+                      <ShowcaseTechRow>
+                        {currentProject.tech.map(t => <TechChip key={t}>{t}</TechChip>)}
+                      </ShowcaseTechRow>
+
+                      <ExperienceLink
+                        href={currentProject.deployedUrl || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        style={{ alignSelf: 'flex-start' }}
+                      >
+                        Experience
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </ExperienceLink>
+
+                      <ShowcaseNavRow>
+                        <ShowcaseNavBtn onClick={prevProject}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M15 18l-6-6 6-6"/>
+                          </svg>
+                        </ShowcaseNavBtn>
+                        <ShowcaseProjectDots>
+                          {PROJECTS_DATA.map((_, i) => (
+                            <ShowcaseProjectDot
+                              key={i}
+                              $active={i === showcaseIdx}
+                              onClick={() => jumpToProject(i)}
+                            />
+                          ))}
+                        </ShowcaseProjectDots>
+                        <ShowcaseNavBtn onClick={nextProject}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
+                        </ShowcaseNavBtn>
+                      </ShowcaseNavRow>
+                    </ShowcaseBody>
+                  </ShowcaseCard>
+                </AnimatePresence>
+              </ShowcaseWrapper>
+
+              <ToggleViewBtn
+                onClick={() => setShowAll(true)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                Explore All Projects
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+                </svg>
+              </ToggleViewBtn>
+            </motion.div>
           ) : (
-            <ProjectsGrid
+            /* ═══ GRID MODE ═══ */
+            <motion.div
               key="grid"
-              as={motion.div}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
             >
-              {filtered.map(project => (
-                <Card
-                  key={project.id}
-                  variants={cardVariants}
-                  $accentColor={categoryColors[project.category] || '#E8D5A3'}
-                  onMouseMove={handleMouseMove}
-                  whileHover={{ y: -6 }}
-                  transition={{ duration: 0.3 }}
+              <FilterSection>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
                 >
-                  <ImageArea>
-                    <ProjectCarousel folderName={project.folderName} />
-                  </ImageArea>
+                  <FilterGroupLabel>Category</FilterGroupLabel>
+                  <ScrollablePillRow>
+                    {availableCategories.map(c => (
+                      <PillTab
+                        key={c}
+                        $active={activeCat === c}
+                        onClick={() => handleCatChange(c)}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                      >
+                        {c}
+                        <PillCount $active={activeCat === c}>{getCatCount(c)}</PillCount>
+                      </PillTab>
+                    ))}
+                    <ResultCount>{filtered.length} {filtered.length === 1 ? 'project' : 'projects'}</ResultCount>
+                  </ScrollablePillRow>
 
-                  <CardBody>
-                    <CardTop>
-                      <CardTitle>{project.title}</CardTitle>
-                      <TypeBadge $type={project.softwareType}>{project.softwareType}</TypeBadge>
-                    </CardTop>
+                  <FilterDivider />
 
-                    <CardDesc>{project.description}</CardDesc>
+                  <FilterGroupLabel style={{ marginTop: '0.75rem' }}>Platform</FilterGroupLabel>
+                  <ScrollablePillRow>
+                    {availablePlatforms.map(t => (
+                      <PillTab
+                        key={t}
+                        $active={activeType === t}
+                        onClick={() => handleTypeChange(t)}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                      >
+                        {t}
+                        <PillCount $active={activeType === t}>{getTypeCount(t)}</PillCount>
+                      </PillTab>
+                    ))}
+                  </ScrollablePillRow>
+                </motion.div>
+              </FilterSection>
 
-                    <TechRow>
-                      {project.tech.map(t => <TechChip key={t}>{t}</TechChip>)}
-                    </TechRow>
+              <AnimatePresence mode="wait">
+                {filtered.length === 0 ? (
+                  <EmptyState
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    No projects match the selected filters.
+                  </EmptyState>
+                ) : (
+                  <ProjectsGrid
+                    key="grid"
+                    as={motion.div}
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {filtered.map(project => (
+                      <Card
+                        key={project.id}
+                        variants={cardVariants}
+                        $accentColor={categoryColors[project.category] || '#E8D5A3'}
+                        onMouseMove={handleMouseMove}
+                        whileHover={{ y: -6 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ImageArea>
+                          <ProjectCarousel folderName={project.folderName} />
+                        </ImageArea>
 
-                    <ExperienceLink
-                      href={project.deployedUrl || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      Experience
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </ExperienceLink>
-                  </CardBody>
-                </Card>
-              ))}
-            </ProjectsGrid>
+                        <CardBody>
+                          <CardTop>
+                            <CardTitle>{project.title}</CardTitle>
+                            <TypeBadge $type={project.softwareType}>{project.softwareType}</TypeBadge>
+                          </CardTop>
+
+                          <CardDesc>{project.description}</CardDesc>
+
+                          <TechRow>
+                            {project.tech.map(t => <TechChip key={t}>{t}</TechChip>)}
+                          </TechRow>
+
+                          <ExperienceLink
+                            href={project.deployedUrl || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            Experience
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                          </ExperienceLink>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </ProjectsGrid>
+                )}
+              </AnimatePresence>
+
+              <ToggleViewBtn
+                onClick={() => setShowAll(false)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                Back to Slideshow
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </ToggleViewBtn>
+            </motion.div>
           )}
         </AnimatePresence>
       </ProjectsContainer>

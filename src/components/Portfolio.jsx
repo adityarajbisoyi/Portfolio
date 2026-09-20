@@ -5,6 +5,7 @@ import Hero from './Hero'
 import About from './About'
 import Projects from './Projects'
 import Contact from './Contact'
+import Certifications from './Certifications'
 import MeshBackground from './MeshBackground'
 
 const PortfolioContainer = styled.div`
@@ -107,6 +108,7 @@ const Portfolio = () => {
       <Hero />
       <About />
       <Projects />
+      <Certifications />
       <Contact />
       <Footer>
         <FooterInner>
