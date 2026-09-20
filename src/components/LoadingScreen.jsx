@@ -1,243 +1,247 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 
+/* ─── Fixed Fullscreen Overlay ─── */
 const LoadingContainer = styled(motion.div)`
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: #0D0D0D;
+  inset: 0;
+  background: #0A0A0A;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 99999;
   overflow: hidden;
+  user-select: none;
 `
 
-const gridPulse = keyframes`
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.06; }
-`
-
-const GridBackground = styled.div`
+/* Radial aura in center */
+const RadialAura = styled.div`
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(rgba(91, 164, 230, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(91, 164, 230, 0.05) 1px, transparent 1px);
-  background-size: 60px 60px;
-  animation: ${gridPulse} 3s ease-in-out infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(80vw, 600px);
+  height: min(80vw, 600px);
+  background: radial-gradient(circle, rgba(232, 213, 163, 0.07) 0%, transparent 70%);
+  pointer-events: none;
 `
 
-const LogoContainer = styled(motion.div)`
-  position: relative;
+const CenterContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 2.25rem;
+  position: relative;
   z-index: 2;
 `
 
-const Initials = styled(motion.div)`
-  font-size: 4rem;
-  font-weight: 800;
-  letter-spacing: 8px;
+/* Brand Header */
+const BrandHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+`
+
+const NameText = styled(motion.h1)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -1.5px;
   color: #FFFFFF;
-  position: relative;
-  
-  @media (max-width: 768px) {
-    font-size: 3rem;
-    letter-spacing: 6px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+
+  span.dot {
+    color: #E8D5A3;
+    font-size: 1.2em;
+    margin-left: 2px;
   }
 `
 
-const InitialLetter = styled(motion.span)`
-  display: inline-block;
-  position: relative;
-`
-
-const glowLine = keyframes`
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-`
-
-const Underline = styled(motion.div)`
-  width: 120px;
-  height: 2px;
-  background: ${props => props.theme.colors.primary};
-  position: relative;
-  overflow: hidden;
-  border-radius: 1px;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, #FFFFFF, transparent);
-    animation: ${glowLine} 1.5s ease-in-out infinite;
-  }
-`
-
-const LoadingBarContainer = styled(motion.div)`
-  width: 200px;
-  height: 2px;
-  background: rgba(91, 164, 230, 0.15);
-  border-radius: 1px;
-  overflow: hidden;
-  margin-top: 1rem;
-  
-  @media (max-width: 768px) {
-    width: 160px;
-  }
-`
-
-const pulse = keyframes`
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(0%); }
-  100% { transform: translateX(100%); }
-`
-
-const LoadingBarFill = styled.div`
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, #5BA4E6, transparent);
-  animation: ${pulse} 1.5s ease-in-out infinite;
-`
-
-const StatusText = styled(motion.p)`
-  font-size: 0.75rem;
-  color: ${props => props.theme.colors.grey};
+const SubtitleText = styled(motion.div)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  margin-top: 1.5rem;
-  font-weight: 500;
+  color: #E8D5A3;
+  opacity: 0.9;
 `
 
-const cornerFloat = keyframes`
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
+/* Progress Area */
+const ProgressContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  width: 280px;
+
+  @media (max-width: 480px) {
+    width: 220px;
+  }
 `
 
-const CornerAccent = styled.div`
+const ProgressTrack = styled.div`
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+`
+
+const ProgressFill = styled.div`
+  height: 100%;
+  background: linear-gradient(90deg, #C4A96B, #E8D5A3, #FFFFFF);
+  border-radius: 2px;
+  width: ${props => props.$width}%;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 12px rgba(232, 213, 163, 0.6);
+`
+
+const ProgressMeta = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const StatusLabel = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #B0B0B0;
+`
+
+const PercentNumber = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #E8D5A3;
+`
+
+/* Minimalist Corner Accents */
+const Corner = styled.div`
   position: absolute;
-  width: 40px;
-  height: 40px;
-  border-color: rgba(91, 164, 230, 0.2);
+  width: 24px;
+  height: 24px;
+  border-color: rgba(232, 213, 163, 0.25);
   border-style: solid;
-  animation: ${cornerFloat} 3s ease-in-out infinite;
-  
-  &.top-left {
-    top: 40px;
-    left: 40px;
-    border-width: 2px 0 0 2px;
-  }
-  
-  &.top-right {
-    top: 40px;
-    right: 40px;
-    border-width: 2px 2px 0 0;
-    animation-delay: 0.5s;
-  }
-  
-  &.bottom-left {
-    bottom: 40px;
-    left: 40px;
-    border-width: 0 0 2px 2px;
-    animation-delay: 1s;
-  }
-  
-  &.bottom-right {
-    bottom: 40px;
-    right: 40px;
-    border-width: 0 2px 2px 0;
-    animation-delay: 1.5s;
+  pointer-events: none;
+
+  &.tl { top: 2rem; left: 2rem; border-width: 1px 0 0 1px; }
+  &.tr { top: 2rem; right: 2rem; border-width: 1px 1px 0 0; }
+  &.bl { bottom: 2rem; left: 2rem; border-width: 0 0 1px 1px; }
+  &.br { bottom: 2rem; right: 2rem; border-width: 0 1px 1px 0; }
+
+  @media (max-width: 600px) {
+    display: none;
   }
 `
 
-const letterVariants = {
-  hidden: { 
-    y: 40, 
-    opacity: 0,
-    filter: 'blur(8px)'
-  },
-  visible: (i) => ({
-    y: 0,
-    opacity: 1,
-    filter: 'blur(0px)',
-    transition: {
-      delay: i * 0.15,
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  })
-}
+const BottomTag = styled.div`
+  position: absolute;
+  bottom: 2.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #666666;
+`
 
-const LoadingScreen = () => {
-  const letters = ['A', 'R', 'B']
+/* ─── Component ─── */
+const LoadingScreen = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const startTime = performance.now()
+    const DURATION = 2000 // Exact 2.0 seconds animation
+
+    let animFrame
+    const step = (currentTime) => {
+      const elapsed = currentTime - startTime
+      const ratio = Math.min(elapsed / DURATION, 1)
+
+      // Smooth easeOutCubic curve
+      const easedPercent = Math.min(100, Math.round((1 - Math.pow(1 - ratio, 3)) * 100))
+      setProgress(easedPercent)
+
+      if (ratio < 1) {
+        animFrame = requestAnimationFrame(step)
+      } else {
+        // Complete smoothly after reaching 100%
+        setTimeout(() => {
+          if (onComplete) onComplete()
+        }, 120)
+      }
+    }
+
+    animFrame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(animFrame)
+  }, [onComplete])
+
+  const getStatusText = (val) => {
+    if (val < 30) return 'INITIALIZING SYSTEM'
+    if (val < 65) return 'HYDRATING ASSETS'
+    if (val < 95) return 'PREPARING WORKSPACE'
+    return 'READY'
+  }
 
   return (
     <LoadingContainer
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ 
+      initial={{ opacity: 1 }}
+      exit={{
         opacity: 0,
-        scale: 1.05,
-        filter: 'blur(10px)',
-        transition: { duration: 0.5, ease: 'easeInOut' }
+        scale: 1.02,
+        transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
       }}
     >
-      <GridBackground />
-      
-      <CornerAccent className="top-left" />
-      <CornerAccent className="top-right" />
-      <CornerAccent className="bottom-left" />
-      <CornerAccent className="bottom-right" />
-      
-      <LogoContainer>
-        <Initials>
-          {letters.map((letter, i) => (
-            <InitialLetter
-              key={letter}
-              custom={i}
-              variants={letterVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {letter}
-            </InitialLetter>
-          ))}
-        </Initials>
-        
-        <Underline
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 120, opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        />
-        
-        <LoadingBarContainer
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
-        >
-          <LoadingBarFill />
-        </LoadingBarContainer>
-        
-        <StatusText
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.5 }}
-        >
-          Loading
-        </StatusText>
-      </LogoContainer>
+      <RadialAura />
+
+      <Corner className="tl" />
+      <Corner className="tr" />
+      <Corner className="bl" />
+      <Corner className="br" />
+
+      <CenterContent>
+        <BrandHeader>
+          <NameText
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Aditya Raj Bisoyi<span className="dot">.</span>
+          </NameText>
+          <SubtitleText
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Full-Stack &amp; Software Engineer
+          </SubtitleText>
+        </BrandHeader>
+
+        <ProgressContainer>
+          <ProgressTrack>
+            <ProgressFill $width={progress} />
+          </ProgressTrack>
+          <ProgressMeta>
+            <StatusLabel>{getStatusText(progress)}</StatusLabel>
+            <PercentNumber>{progress}%</PercentNumber>
+          </ProgressMeta>
+        </ProgressContainer>
+      </CenterContent>
+
+      <BottomTag>PORTFOLIO EXPERIENCE // 2025</BottomTag>
     </LoadingContainer>
   )
 }

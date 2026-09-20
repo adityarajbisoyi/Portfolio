@@ -9,9 +9,9 @@ const shimmer = keyframes`
 const SkeletonPulse = styled(motion.div)`
   background: linear-gradient(
     90deg,
-    rgba(91, 164, 230, 0.05) 0%,
-    rgba(91, 164, 230, 0.12) 50%,
-    rgba(91, 164, 230, 0.05) 100%
+    rgba(232, 213, 163, 0.04) 0%,
+    rgba(232, 213, 163, 0.10) 50%,
+    rgba(232, 213, 163, 0.04) 100%
   );
   background-size: 200% 100%;
   animation: ${shimmer} 1.8s ease-in-out infinite;
